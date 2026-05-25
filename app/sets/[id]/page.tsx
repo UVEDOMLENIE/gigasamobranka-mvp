@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { uuid } from "@/lib/id";
+import { KatexRender } from "@/components/KatexRender";
 
 type Difficulty = "easy" | "medium" | "hard";
 type Card = {
@@ -156,20 +157,36 @@ export default function SetEditor() {
                 </div>
               </div>
               <div className="space-y-2">
-                <textarea
-                  value={card.question}
-                  onChange={(e) => updateCard(i, "question", e.target.value)}
-                  placeholder="Вопрос"
-                  rows={2}
-                  className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-300 resize-none"
-                />
-                <textarea
-                  value={card.answer}
-                  onChange={(e) => updateCard(i, "answer", e.target.value)}
-                  placeholder="Ответ"
-                  rows={2}
-                  className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-300 resize-none"
-                />
+                <div>
+                  <label className="text-[10px] uppercase tracking-wide text-gray-400">Вопрос</label>
+                  <textarea
+                    value={card.question}
+                    onChange={(e) => updateCard(i, "question", e.target.value)}
+                    placeholder="Вопрос"
+                    rows={2}
+                    className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-300 resize-none"
+                  />
+                  {card.question.includes("$") && (
+                    <div className="mt-1 px-3 py-1 bg-amber-50/60 rounded text-sm">
+                      <KatexRender text={card.question} />
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase tracking-wide text-gray-400">Ответ</label>
+                  <textarea
+                    value={card.answer}
+                    onChange={(e) => updateCard(i, "answer", e.target.value)}
+                    placeholder="Ответ"
+                    rows={2}
+                    className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-300 resize-none"
+                  />
+                  {card.answer.includes("$") && (
+                    <div className="mt-1 px-3 py-1 bg-amber-50/60 rounded text-sm">
+                      <KatexRender text={card.answer} />
+                    </div>
+                  )}
+                </div>
                 {card.source && (
                   <p className="text-xs text-gray-400">📎 {card.source}</p>
                 )}

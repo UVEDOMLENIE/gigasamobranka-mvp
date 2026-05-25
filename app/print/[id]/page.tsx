@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db/client";
 import { sets, cards } from "@/lib/db/schema";
 import { eq, asc } from "drizzle-orm";
+import { PrintActions } from "./print-actions";
+import { KatexRender } from "@/components/KatexRender";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -36,18 +38,7 @@ export default async function PrintPage({ params }: Props) {
         }
       `}</style>
 
-      {/* Кнопка печати */}
-      <div className="no-print p-4 bg-amber-50 flex gap-3">
-        <button
-          onClick={() => window.print()}
-          className="bg-amber-500 text-white px-4 py-2 rounded-lg text-sm font-medium"
-        >
-          🖨 Печать
-        </button>
-        <a href={`/sets/${id}`} className="text-amber-600 text-sm self-center hover:underline">
-          ← Редактор
-        </a>
-      </div>
+      <PrintActions setId={id} />
 
       {/* A4 сетка */}
       <div className="p-8 bg-white">
@@ -71,9 +62,9 @@ export default async function PrintPage({ params }: Props) {
           {cardList.map((card, i) => (
             <div key={card.id} className="card-cell">
               <p className="text-xs text-gray-400 mb-1">#{i + 1} — вопрос</p>
-              <p className="text-sm font-medium text-gray-800 whitespace-pre-wrap">
-                {card.question}
-              </p>
+              <div className="text-sm font-medium text-gray-800">
+                <KatexRender text={card.question} />
+              </div>
               {card.source && (
                 <p className="text-xs text-gray-300 mt-1">📎 {card.source}</p>
               )}
@@ -99,9 +90,9 @@ export default async function PrintPage({ params }: Props) {
           {cardList.map((card, i) => (
             <div key={card.id} className="card-cell">
               <p className="text-xs text-gray-400 mb-1">#{i + 1} — ответ</p>
-              <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                {card.answer}
-              </p>
+              <div className="text-sm text-gray-700">
+                <KatexRender text={card.answer} />
+              </div>
             </div>
           ))}
         </div>

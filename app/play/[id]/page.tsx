@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useSearchParams, useRouter } from "next/navigation";
+import { useEffect, useState, useRef } from "react";
+import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { KatexRender } from "@/components/KatexRender";
 
 type Card = {
   id: string;
@@ -10,12 +11,17 @@ type Card = {
   answer: string;
   source?: string | null;
 };
-type SetData = { id: string; subject: string | null; grade: string | null; topic: string | null; cards: Card[] };
+type SetData = {
+  id: string;
+  subject: string | null;
+  grade: string | null;
+  topic: string | null;
+  cards: Card[];
+};
 
 export default function Player() {
   const { id } = useParams<{ id: string }>();
   const searchParams = useSearchParams();
-  const router = useRouter();
   const isTeacher = searchParams.get("mode") === "teacher";
 
   const [set, setSet] = useState<SetData | null>(null);
@@ -28,6 +34,8 @@ export default function Player() {
   const [done, setDone] = useState(false);
   const [loading, setLoading] = useState(true);
   const [startTime, setStartTime] = useState(0);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch(`/api/sets/${id}`)
@@ -38,6 +46,48 @@ export default function Player() {
         setLoading(false);
       });
   }, [id]);
+
+  // Fullscreen tracking
+  useEffect(() => {
+    function onChange() {
+      setIsFullscreen(!!document.fullscreenElement);
+    }
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+
+  // Keyboard shortcuts (для учителя на доске)
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (!sessionId && !isTeacher) return;
+      if (e.key === " " || e.key === "Enter") {
+        e.preventDefault();
+        if (!flipped) setFlipped(true);
+      } else if (e.key === "ArrowLeft") {
+        if (current > 0) {
+          setCurrent((c) => c - 1);
+          setFlipped(false);
+        }
+      } else if (e.key === "ArrowRight") {
+        if (flipped) answer(true);
+      } else if (e.key === "1" || e.key.toLowerCase() === "n") {
+        if (flipped) answer(false);
+      } else if (e.key === "2" || e.key.toLowerCase() === "y") {
+        if (flipped) answer(true);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [current, flipped, sessionId, isTeacher]);
+
+  async function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      await containerRef.current?.requestFullscreen?.();
+    } else {
+      await document.exitFullscreen?.();
+    }
+  }
 
   async function startSession() {
     const res = await fetch("/api/sessions", {
@@ -69,7 +119,6 @@ export default function Player() {
     setStartTime(Date.now());
 
     if (current + 1 >= order.length) {
-      // завершить сессию
       if (sessionId) {
         await fetch("/api/sessions", {
           method: "PUT",
@@ -91,18 +140,38 @@ export default function Player() {
     setResults({ known: 0, total: 0 });
   }
 
-  if (loading) return <div className="p-8 text-gray-500">Загрузка…</div>;
-  if (!set) return <div className="p-8 text-red-600">Набор не найден</div>;
+  function restart() {
+    setCurrent(0);
+    setFlipped(false);
+    setDone(false);
+    setResults({ known: 0, total: 0 });
+  }
+
+  if (loading)
+    return (
+      <div className="min-h-screen flex items-center justify-center text-amber-700">
+        <span className="animate-pulse">Загружаю карточки…</span>
+      </div>
+    );
+
+  if (!set || set.cards.length === 0)
+    return (
+      <div className="min-h-screen flex items-center justify-center flex-col gap-3">
+        <p className="text-2xl">📭</p>
+        <p className="text-gray-600">Набор пустой</p>
+        <Link href={`/sets/${id}`} className="text-amber-600 hover:underline text-sm">
+          Открыть редактор
+        </Link>
+      </div>
+    );
 
   // Экран ввода имени (режим ученика)
   if (!isTeacher && !sessionId) {
     return (
-      <main className="min-h-screen bg-amber-50 flex items-center justify-center px-4">
-        <div className="bg-white rounded-2xl shadow-sm border border-amber-100 p-8 max-w-sm w-full text-center">
-          <p className="text-2xl mb-1">📖</p>
-          <h1 className="font-bold text-lg text-amber-900 mb-1">
-            {set.topic}
-          </h1>
+      <main className="min-h-screen bg-gradient-to-b from-amber-50 to-orange-50 flex items-center justify-center px-4">
+        <div className="bg-white rounded-3xl shadow-md border border-amber-100 p-8 max-w-sm w-full text-center">
+          <div className="text-5xl mb-3">📖</div>
+          <h1 className="font-bold text-xl text-amber-900 mb-1">{set.topic}</h1>
           <p className="text-sm text-gray-500 mb-6">
             {set.subject} · {set.grade} кл. · {set.cards.length} карточек
           </p>
@@ -110,13 +179,14 @@ export default function Player() {
             value={studentName}
             onChange={(e) => setStudentName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && studentName.trim() && startSession()}
-            placeholder="Введите своё имя"
-            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-base mb-4 focus:outline-none focus:ring-2 focus:ring-amber-400"
+            placeholder="Введи имя"
+            autoFocus
+            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-base text-center mb-4 focus:outline-none focus:ring-2 focus:ring-amber-400"
           />
           <button
             disabled={!studentName.trim()}
             onClick={startSession}
-            className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-semibold rounded-xl py-3"
+            className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-semibold rounded-xl py-3 text-base shadow-sm"
           >
             Начать ▶
           </button>
@@ -128,29 +198,42 @@ export default function Player() {
   // Экран результатов
   if (done) {
     const pct = Math.round((results.known / results.total) * 100);
+    const praise =
+      pct >= 90 ? "Великолепно!" :
+      pct >= 75 ? "Отлично!" :
+      pct >= 50 ? "Хорошая работа!" :
+      "Продолжай учиться!";
+    const emoji =
+      pct >= 90 ? "🌟" : pct >= 75 ? "🎉" : pct >= 50 ? "👏" : "💪";
+
     return (
-      <main className="min-h-screen bg-amber-50 flex items-center justify-center px-4">
-        <div className="bg-white rounded-2xl shadow-sm border border-amber-100 p-8 max-w-sm w-full text-center">
-          <p className="text-4xl mb-2">🎉</p>
-          <h2 className="text-xl font-bold text-amber-900 mb-1">
-            {pct >= 80 ? "Молодец!" : pct >= 50 ? "Хорошая работа!" : "Продолжай!"}
-          </h2>
-          <p className="text-gray-600 mb-6">
-            Знал {results.known} из {results.total} ({pct}%)
+      <main className="min-h-screen bg-gradient-to-b from-amber-50 to-orange-50 flex items-center justify-center px-4">
+        <div className="bg-white rounded-3xl shadow-md border border-amber-100 p-8 max-w-sm w-full text-center animate-flip-in">
+          <div className="text-6xl mb-3">{emoji}</div>
+          <h2 className="text-2xl font-bold text-amber-900 mb-2">{praise}</h2>
+          <p className="text-gray-600 mb-1">
+            Знал {results.known} из {results.total}
           </p>
-          <div className="space-y-3">
+          <div className="text-4xl font-bold text-amber-500 mb-6">{pct}%</div>
+          <div className="space-y-2">
             <button
-              onClick={() => { setCurrent(0); setFlipped(false); setDone(false); setResults({ known: 0, total: 0 }); }}
-              className="w-full bg-amber-500 hover:bg-amber-600 text-white rounded-xl py-2.5 font-medium"
+              onClick={restart}
+              className="w-full bg-amber-500 hover:bg-amber-600 text-white rounded-xl py-3 font-medium shadow-sm"
             >
               Пройти заново
             </button>
-            {!isTeacher && (
+            <button
+              onClick={shuffle}
+              className="w-full border border-amber-300 text-amber-700 hover:bg-amber-50 rounded-xl py-2.5 font-medium text-sm"
+            >
+              🔀 Перемешать и пройти
+            </button>
+            {isTeacher && (
               <Link
                 href={`/sets/${id}`}
-                className="block w-full border border-amber-300 text-amber-700 hover:bg-amber-50 rounded-xl py-2.5 font-medium"
+                className="block w-full text-gray-500 hover:text-gray-700 py-2 text-sm"
               >
-                Вернуться к редактору
+                ← Редактор
               </Link>
             )}
           </div>
@@ -161,44 +244,55 @@ export default function Player() {
 
   const cardIdx = order[current];
   const card = set.cards[cardIdx];
+  const progressPct = ((current + (flipped ? 0.5 : 0)) / order.length) * 100;
 
   return (
-    <main className="min-h-screen bg-amber-50 flex flex-col items-center justify-center px-4 py-8">
+    <main
+      ref={containerRef}
+      className="min-h-screen bg-gradient-to-b from-amber-50 to-orange-50 flex flex-col items-center justify-center px-4 py-8"
+    >
       {/* Прогресс */}
-      <div className="w-full max-w-lg mb-4">
-        <div className="flex justify-between text-xs text-gray-400 mb-1">
+      <div className="w-full max-w-xl mb-6">
+        <div className="flex justify-between text-xs text-amber-700/70 mb-1.5">
           <span>{current + 1} / {order.length}</span>
           <span>✓ {results.known}</span>
         </div>
-        <div className="h-2 bg-amber-100 rounded-full">
+        <div className="h-2 bg-amber-100 rounded-full overflow-hidden">
           <div
-            className="h-2 bg-amber-400 rounded-full transition-all"
-            style={{ width: `${((current) / order.length) * 100}%` }}
+            className="h-2 bg-amber-400 rounded-full transition-all duration-500"
+            style={{ width: `${progressPct}%` }}
           />
         </div>
       </div>
 
       {/* Карточка */}
       <div
-        className="w-full max-w-lg min-h-56 bg-white rounded-2xl border border-amber-100 shadow-md flex flex-col items-center justify-center p-8 cursor-pointer select-none"
+        key={`${cardIdx}-${flipped}`}
+        className="w-full max-w-xl min-h-64 bg-white rounded-3xl border border-amber-100 shadow-lg flex flex-col items-center justify-center p-8 cursor-pointer select-none animate-flip-in"
         onClick={() => setFlipped((f) => !f)}
       >
         {!flipped ? (
           <>
-            <p className="text-xs text-gray-400 uppercase tracking-wide mb-4">Вопрос</p>
-            <p className="text-xl font-semibold text-gray-800 text-center whitespace-pre-wrap">
-              {card.question}
+            <p className="text-xs text-amber-600 uppercase tracking-wide mb-4 font-medium">
+              Вопрос
             </p>
-            <p className="text-xs text-gray-300 mt-6">Нажмите чтобы увидеть ответ</p>
+            <KatexRender
+              text={card.question}
+              className="text-2xl font-semibold text-gray-800 text-center leading-snug"
+            />
+            <p className="text-xs text-gray-300 mt-8">Нажмите чтобы увидеть ответ</p>
           </>
         ) : (
           <>
-            <p className="text-xs text-gray-400 uppercase tracking-wide mb-4">Ответ</p>
-            <p className="text-lg text-gray-700 text-center whitespace-pre-wrap">
-              {card.answer}
+            <p className="text-xs text-amber-600 uppercase tracking-wide mb-4 font-medium">
+              Ответ
             </p>
+            <KatexRender
+              text={card.answer}
+              className="text-lg text-gray-700 text-center leading-relaxed"
+            />
             {card.source && (
-              <p className="text-xs text-gray-300 mt-4">📎 {card.source}</p>
+              <p className="text-xs text-amber-700/50 mt-6">📎 {card.source}</p>
             )}
           </>
         )}
@@ -206,33 +300,43 @@ export default function Player() {
 
       {/* Кнопки ответа */}
       {flipped && (
-        <div className="flex gap-4 mt-6">
+        <div className="flex gap-3 mt-6 animate-flip-in">
           <button
             onClick={() => answer(false)}
-            className="px-8 py-3 rounded-xl bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-sm"
+            className="px-8 py-4 rounded-2xl bg-red-100 hover:bg-red-200 active:scale-95 text-red-700 font-bold text-base transition shadow-sm"
           >
             ✗ Не знал
           </button>
           <button
             onClick={() => answer(true)}
-            className="px-8 py-3 rounded-xl bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-sm"
+            className="px-8 py-4 rounded-2xl bg-green-100 hover:bg-green-200 active:scale-95 text-green-700 font-bold text-base transition shadow-sm"
           >
             ✓ Знал
           </button>
         </div>
       )}
 
-      {/* Вспомогательные кнопки */}
-      <div className="flex gap-3 mt-6 text-xs text-gray-400">
-        <button onClick={shuffle} className="hover:text-gray-600">
+      {/* Toolbar */}
+      <div className="flex gap-3 mt-8 text-xs text-amber-700/60">
+        <button onClick={shuffle} className="hover:text-amber-700 transition">
           🔀 Перемешать
         </button>
+        <button onClick={toggleFullscreen} className="hover:text-amber-700 transition">
+          {isFullscreen ? "⤓ Выйти" : "⛶ На весь экран"}
+        </button>
         {isTeacher && (
-          <Link href={`/sets/${id}`} className="hover:text-gray-600">
+          <Link href={`/sets/${id}`} className="hover:text-amber-700 transition">
             ← Редактор
           </Link>
         )}
       </div>
+
+      {/* Подсказка клавиш для учителя */}
+      {isTeacher && !isFullscreen && (
+        <p className="text-xs text-amber-700/30 mt-4 text-center">
+          ⌨️ Пробел — открыть · Y — знал · N — не знал · ← / →
+        </p>
+      )}
     </main>
   );
 }
