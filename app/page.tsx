@@ -16,12 +16,18 @@ const LOADING_PHRASES = [
 
 export default function Home() {
   const router = useRouter();
+  const [subject, setSubject] = useState("");
+  const [grade, setGrade] = useState("");
+  const [topic, setTopic] = useState("");
+  const [count, setCount] = useState(8);
+  const [difficulty, setDifficulty] = useState<Difficulty>("medium");
+  const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingPhrase, setLoadingPhrase] = useState(LOADING_PHRASES[0]);
+  const [loadingDemo, setLoadingDemo] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [filesPicked, setFilesPicked] = useState<string[]>([]);
+  const [filesPicked, setFilesPicked] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const formRef = useRef<HTMLFormElement>(null);
 
   // прокручивающиеся фразы загрузки
   useEffect(() => {
@@ -34,40 +40,64 @@ export default function Home() {
     return () => clearInterval(t);
   }, [loading]);
 
-  function applyDemo(demo: DemoMaterial) {
-    const form = formRef.current;
-    if (!form) return;
-    (form.elements.namedItem("subject") as HTMLInputElement).value = demo.subject;
-    (form.elements.namedItem("grade") as HTMLInputElement).value = demo.grade;
-    (form.elements.namedItem("topic") as HTMLInputElement).value = demo.topic;
-    (form.elements.namedItem("count") as HTMLInputElement).value = String(demo.count);
-    (form.elements.namedItem("difficulty") as HTMLSelectElement).value = demo.difficulty;
-    (form.elements.namedItem("text") as HTMLTextAreaElement).value = demo.text;
-    setFilesPicked([]);
+  async function generateFromDemo(demo: DemoMaterial) {
     setError(null);
+    setLoadingDemo(demo.id);
+    setLoading(true);
+    try {
+      const body = {
+        subject: demo.subject,
+        grade: demo.grade,
+        topic: demo.topic,
+        count: demo.count,
+        difficulty: demo.difficulty,
+        sources: [{ filename: `${demo.label}.txt`, text: demo.text }],
+      };
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err as { error?: string }).error ?? "Ошибка генерации");
+      }
+      const { setId } = (await res.json()) as { setId: string };
+      router.push(`/sets/${setId}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Ошибка");
+      setLoading(false);
+      setLoadingDemo(null);
+    }
   }
 
   function onFilesChange() {
     const files = fileInputRef.current?.files;
-    if (!files) return setFilesPicked([]);
-    setFilesPicked(Array.from(files).map((f) => f.name));
+    setFilesPicked(files ? Array.from(files) : []);
+  }
+
+  function removeFile(idx: number) {
+    setFilesPicked((prev) => prev.filter((_, i) => i !== idx));
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
+
+    if (!subject.trim() || !grade.trim() || !topic.trim()) {
+      setError("Заполните предмет, класс и тему");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const form = e.currentTarget;
-      const data = new FormData(form);
-
-      const files = fileInputRef.current?.files;
       const sources: { filename: string; text: string }[] = [];
 
-      if (files && files.length > 0) {
+      if (filesPicked.length > 0) {
         const uploadData = new FormData();
-        for (const file of Array.from(files)) uploadData.append("files", file);
+        for (const file of filesPicked) uploadData.append("files", file);
 
         const uploadRes = await fetch("/api/upload", {
           method: "POST",
@@ -83,36 +113,23 @@ export default function Home() {
         sources.push(...items);
       }
 
-      const textareaText = (data.get("text") as string)?.trim();
-      if (sources.length === 0) {
-        if (!textareaText) {
-          throw new Error("Загрузите файлы или вставьте текст. Или попробуйте готовый пример 👇");
-        }
-        sources.push({ filename: "вставленный текст", text: textareaText });
-      } else if (textareaText) {
-        sources.push({ filename: "вставленный текст", text: textareaText });
+      const trimmed = text.trim();
+      if (sources.length === 0 && !trimmed) {
+        throw new Error("Загрузите файлы или вставьте текст. Или попробуйте готовый пример выше �");
       }
-
-      const body = {
-        subject: data.get("subject"),
-        grade: data.get("grade"),
-        topic: data.get("topic"),
-        count: Number(data.get("count") ?? 8),
-        difficulty: data.get("difficulty") as Difficulty,
-        sources,
-      };
+      if (trimmed) {
+        sources.push({ filename: "вставленный текст", text: trimmed });
+      }
 
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ subject, grade, topic, count, difficulty, sources }),
       });
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(
-          (err as { error?: string }).error ?? `Ошибка сервера (${res.status})`,
-        );
+        throw new Error((err as { error?: string }).error ?? `Ошибка сервера (${res.status})`);
       }
 
       const { setId } = (await res.json()) as { setId: string };
@@ -123,10 +140,25 @@ export default function Home() {
     }
   }
 
+  function onDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    const dropped = Array.from(e.dataTransfer.files).filter((f) =>
+      /\.(txt|md|pdf|docx|pptx)$/i.test(f.name),
+    );
+    if (dropped.length === 0) return;
+    // Объединяем с уже выбранными
+    const merged = [...filesPicked, ...dropped].slice(0, 10);
+    setFilesPicked(merged);
+    // Обновляем input через DataTransfer
+    const dt = new DataTransfer();
+    merged.forEach((f) => dt.items.add(f));
+    if (fileInputRef.current) fileInputRef.current.files = dt.files;
+  }
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-amber-50 to-orange-50 py-10 px-4">
       <div className="max-w-2xl mx-auto">
-        {/* Шапка с маскотом */}
+        {/* Шапка */}
         <div className="mb-8 text-center">
           <div className="text-6xl mb-2 inline-block animate-bounce-slow">🎒</div>
           <h1 className="text-4xl font-bold text-amber-900 tracking-tight">
@@ -137,50 +169,62 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Демо-материалы */}
-        <div className="mb-6">
-          <p className="text-xs uppercase tracking-wide text-amber-700/70 mb-2 text-center font-medium">
-            Попробовать на примере
+        {/* Демо: один клик → сразу карточки */}
+        <div className="mb-8 bg-white/60 backdrop-blur rounded-2xl border border-amber-200 p-4">
+          <p className="text-xs uppercase tracking-wide text-amber-800/80 mb-3 text-center font-medium">
+            ⚡ Демо в один клик · сразу сгенерирует
           </p>
           <div className="flex flex-wrap gap-2 justify-center">
-            {DEMO_MATERIALS.map((d) => (
-              <button
-                key={d.id}
-                onClick={() => applyDemo(d)}
-                type="button"
-                className="text-xs bg-white border border-amber-200 hover:border-amber-400 hover:bg-amber-50 rounded-full px-3 py-1.5 transition shadow-sm"
-              >
-                <span className="mr-1">{d.emoji}</span>
-                {d.label}
-              </button>
-            ))}
+            {DEMO_MATERIALS.map((d) => {
+              const isLoadingThis = loadingDemo === d.id;
+              return (
+                <button
+                  key={d.id}
+                  type="button"
+                  disabled={loading}
+                  onClick={() => generateFromDemo(d)}
+                  className="text-sm bg-white border border-amber-200 hover:border-amber-400 hover:bg-amber-50 disabled:opacity-50 rounded-xl px-3 py-2 transition shadow-sm flex items-center gap-1.5"
+                >
+                  <span className="text-base">{d.emoji}</span>
+                  <span>{d.label}</span>
+                  {isLoadingThis && (
+                    <svg className="animate-spin h-3 w-3 text-amber-600" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeOpacity="0.3" />
+                      <path d="M12 2 A 10 10 0 0 1 22 12" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                    </svg>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
 
+        {/* Разделитель */}
+        <div className="text-center text-xs text-amber-700/50 my-6">
+          ── или составь свой набор ──
+        </div>
+
         <form
-          ref={formRef}
           onSubmit={handleSubmit}
           className="bg-white rounded-2xl shadow-md border border-amber-100 p-6 space-y-5"
         >
           {/* Предмет, класс */}
           <div className="grid grid-cols-3 gap-3">
             <div className="col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Предмет
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Предмет</label>
               <input
-                name="subject"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
                 required
                 placeholder="Русский язык"
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Класс
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Класс</label>
               <input
-                name="grade"
+                value={grade}
+                onChange={(e) => setGrade(e.target.value)}
                 required
                 placeholder="3"
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
@@ -189,11 +233,10 @@ export default function Home() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Тема
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Тема</label>
             <input
-              name="topic"
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
               required
               placeholder="Словарные слова — Зима"
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
@@ -202,25 +245,21 @@ export default function Home() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Карточек
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Карточек</label>
               <input
-                name="count"
                 type="number"
                 min={3}
                 max={30}
-                defaultValue={8}
+                value={count}
+                onChange={(e) => setCount(Number(e.target.value) || 8)}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Сложность
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Сложность</label>
               <select
-                name="difficulty"
-                defaultValue="medium"
+                value={difficulty}
+                onChange={(e) => setDifficulty(e.target.value as Difficulty)}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
               >
                 <option value="easy">Лёгкие</option>
@@ -230,37 +269,25 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Загрузка файлов */}
+          {/* Файлы */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Файлы (TXT, PDF, DOCX, PPTX)
             </label>
             <div
-              className="border-2 border-dashed border-amber-200 rounded-xl p-5 text-center cursor-pointer hover:border-amber-400 hover:bg-amber-50/30 transition"
+              className="border-2 border-dashed border-amber-200 rounded-xl p-5 text-center cursor-pointer hover:border-amber-400 hover:bg-amber-50/40 transition"
               onClick={() => fileInputRef.current?.click()}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = "copy";
+              }}
+              onDrop={onDrop}
             >
-              {filesPicked.length === 0 ? (
-                <>
-                  <p className="text-sm text-gray-500">
-                    Перетащите файлы или{" "}
-                    <span className="text-amber-600 font-medium">выберите</span>
-                  </p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    до 10 файлов, по 20 МБ
-                  </p>
-                </>
-              ) : (
-                <div className="text-left">
-                  <p className="text-sm font-medium text-amber-700 mb-1">
-                    Выбрано {filesPicked.length}:
-                  </p>
-                  <ul className="text-xs text-gray-600 space-y-0.5">
-                    {filesPicked.map((name) => (
-                      <li key={name}>📄 {name}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+              <p className="text-sm text-gray-500">
+                Перетащите файлы сюда или{" "}
+                <span className="text-amber-600 font-medium">кликните чтобы выбрать</span>
+              </p>
+              <p className="text-xs text-gray-400 mt-1">до 10 файлов, по 20 МБ</p>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -270,19 +297,49 @@ export default function Home() {
                 className="hidden"
               />
             </div>
+            {filesPicked.length > 0 && (
+              <div className="mt-2 space-y-1">
+                {filesPicked.map((f, i) => (
+                  <div
+                    key={`${f.name}-${i}`}
+                    className="flex items-center justify-between bg-amber-50 border border-amber-100 rounded-lg px-3 py-1.5 text-xs"
+                  >
+                    <span className="truncate text-amber-900">
+                      📄 {f.name}{" "}
+                      <span className="text-amber-500">
+                        · {(f.size / 1024).toFixed(0)} КБ
+                      </span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => removeFile(i)}
+                      className="text-red-400 hover:text-red-600 ml-2"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Textarea */}
+          {/* Текст */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Или вставьте текст напрямую
             </label>
             <textarea
-              name="text"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
               rows={5}
-              placeholder="Вставьте учебный текст, словарные слова, конспект…&#10;Можно использовать формулы в LaTeX: $S = a \cdot b$"
+              placeholder={`Вставьте учебный текст, словарные слова, конспект…\nМожно использовать формулы в LaTeX: $S = a \\cdot b$`}
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 resize-y"
             />
+            {text.length > 0 && (
+              <p className="text-xs text-gray-400 mt-1">
+                {text.length} символов · {text.split(/\s+/).filter(Boolean).length} слов
+              </p>
+            )}
           </div>
 
           {/* Ошибка */}
@@ -312,7 +369,6 @@ export default function Home() {
           </button>
         </form>
 
-        {/* Footer */}
         <p className="text-center text-xs text-amber-700/60 mt-8">
           ГигаСамобранка · Хакатон СберОбразование × Школа 21
         </p>
