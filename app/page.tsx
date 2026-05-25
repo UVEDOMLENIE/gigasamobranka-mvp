@@ -206,6 +206,9 @@ export default function Home() {
 
         <form
           onSubmit={handleSubmit}
+          method="post"
+          action="#"
+          noValidate
           className="bg-white rounded-2xl shadow-md border border-amber-100 p-6 space-y-5"
         >
           {/* Предмет, класс */}

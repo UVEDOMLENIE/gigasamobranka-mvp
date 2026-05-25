@@ -204,7 +204,7 @@ export default function SetEditor() {
             + Добавить карточку
           </button>
           <button
-            onClick={() => router.push(`/play/${id}`)}
+            onClick={() => router.push(`/play/${id}?mode=teacher`)}
             className="text-sm bg-amber-500 hover:bg-amber-600 text-white rounded-lg px-4 py-2"
           >
             ▶ Открыть плеер
