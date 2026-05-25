@@ -1,3 +1,10 @@
+<!-- BEGIN:project-rules -->
+# Project rules
+
+- **NO real names in public repo** — git commits, README, code comments, docs. Use "UVEDOMLENIE" or "GigaSamobranka Team" only.
+- Git author: user.name = UVEDOMLENIE, user.email = 132967276+UVEDOMLENIE@users.noreply.github.com
+<!-- END:project-rules -->
+
 <!-- BEGIN:nextjs-agent-rules -->
 # This is NOT the Next.js you know
 
