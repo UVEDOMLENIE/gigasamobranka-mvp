@@ -224,6 +224,7 @@ async function callOpenAiCompatible(
     body: JSON.stringify({
       model: config.model,
       temperature: 0.4,
+      stream: false,
       messages: [
         {
           role: "system",
