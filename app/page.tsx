@@ -292,7 +292,11 @@ export default function Home() {
                 Перетащите файлы сюда или{" "}
                 <span className="text-amber-600 font-medium">кликните чтобы выбрать</span>
               </p>
-              <p className="text-xs text-gray-400 mt-1">до 10 файлов, по 20 МБ</p>
+              <p className="text-xs text-gray-400 mt-1">
+                до 10 файлов, по 20 МБ
+                <br />
+                <span className="text-amber-600/80">ZIP пока не распаковываем — загрузите файлы отдельно</span>
+              </p>
               <input
                 ref={fileInputRef}
                 type="file"
