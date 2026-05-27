@@ -63,7 +63,7 @@ export async function generateCards(
           process.env.SCARLEX_BASE_URL ??
           process.env.OPENAI_BASE_URL ??
           "https://api.scarlex.ru/v1",
-        model: runtime?.model ?? process.env.SCARLEX_MODEL ?? "claude-opus-4-7",
+        model: runtime?.model ?? process.env.SCARLEX_MODEL ?? "claude-sonnet-4-7",
       });
       return { cards, usedMock: false, provider: "scarlex", debug };
     } catch (err) {

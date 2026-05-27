@@ -24,14 +24,14 @@ const DEFAULT_SETTINGS: LlmSettings = {
   baseUrl: "https://api.scarlex.ru/v1",
   oauthUrl: "https://ngw.devices.sberbank.ru:9443/api/v2/oauth",
   scope: "GIGACHAT_API_PERS",
-  model: "claude-opus-4-7",
+  model: "claude-sonnet-4-7",
 };
 
 const PROVIDER_DEFAULTS: Record<Provider, Partial<LlmSettings>> = {
   mock: {},
   scarlex: {
     baseUrl: "https://api.scarlex.ru/v1",
-    model: "claude-opus-4-7",
+    model: "claude-sonnet-4-7",
   },
   gigachat: {
     baseUrl: "https://gigachat.devices.sberbank.ru/api/v1",
