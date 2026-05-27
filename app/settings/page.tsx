@@ -43,13 +43,11 @@ const PROVIDER_DEFAULTS: Record<Provider, Partial<LlmSettings>> = {
 };
 
 const SCARLEX_MODELS = [
-  { value: "claude-haiku-4-7", label: "claude-haiku-4-7 (проверено — работает, default)" },
-  { value: "claude-opus-4.7", label: "claude-opus-4.7 (проверено — работает)" },
-  { value: "claude-opus-4.6", label: "claude-opus-4.6" },
-  { value: "claude-sonnet-4", label: "claude-sonnet-4 (проверено — работает)" },
-  { value: "claude-sonnet-4.6", label: "claude-sonnet-4.6" },
-  { value: "claude-sonnet-4-thinking", label: "claude-sonnet-4-thinking" },
-  { value: "claude-haiku-3.5", label: "claude-haiku-3.5 (пустой ответ — не рекомендуется)" },
+  { value: "claude-haiku-4-7", label: "claude-haiku-4-7 (проверено — default)" },
+  { value: "claude-opus-4.7", label: "claude-opus-4.7 (проверено)" },
+  { value: "claude-opus-4.6", label: "claude-opus-4.6 (проверено)" },
+  { value: "claude-sonnet-4", label: "claude-sonnet-4 (проверено)" },
+  { value: "claude-sonnet-4.6", label: "claude-sonnet-4.6 (проверено)" },
 ];
 
 export default function SettingsPage() {

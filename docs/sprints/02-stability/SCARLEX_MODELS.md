@@ -21,12 +21,15 @@
 
 | ID | Результат | Вывод |
 |---|---|---|
-| `claude-haiku-4-7` | **200 OK, 169 tokens** | ✅ **Рабочий алиас**. Генерирует полный JSON |
+| `claude-haiku-4-7` | **200 OK, 169 tokens** | ✅ **Рабочий default**. Генерирует полный JSON |
 | `claude-haiku-3.5` | **200 OK, 1 token, пустой content** | ❌ Не генерирует карточки |
 | `claude-sonnet-4-7` | **200 + "Service temporarily unavailable"** | ❌ Неверный ID (не существует) |
 | `claude-sonnet-4` | **200 OK, 169 tokens** | ✅ **Работает** |
+| `claude-sonnet-4.6` | **200 OK, 169 tokens** | ✅ **Работает** |
+| `claude-sonnet-4-thinking` | **200 OK, 1 token, пустой content** | ❌ Не генерирует карточки |
 | `claude-opus-4-7` | **429** | ❌ Неверный ID (не существует) |
 | `claude-opus-4.7` | **200 OK, 147 tokens** | ✅ **Работает** |
+| `claude-opus-4.6` | **200 OK, 147 tokens** | ✅ **Работает** |
 | `gpt-4o` | **402 Quota exceeded** | ❌ Не назначена квота |
 | `gpt-4o-mini` | **402 Quota exceeded** | ❌ Не назначена квота |
 
@@ -54,12 +57,13 @@
 
 ## Рекомендация для MVP
 
-- GPT-модели не работают (402 квота) — убраны из UI
 - `claude-haiku-4-7` — ✅ default, работает, быстрая
-- `claude-sonnet-4` — ✅ работает, умнее haiku
-- `claude-opus-4.7` — ✅ работает, самая умная
-- `claude-haiku-3.5` — ❌ пустой ответ, не подходит
-- Использовать ID **с точкой**: `claude-opus-4.7`, не `claude-opus-4-7`
+- `claude-sonnet-4` / `claude-sonnet-4.6` — ✅ работают, умнее haiku
+- `claude-opus-4.7` / `claude-opus-4.6` — ✅ работают, самые умные
+- `claude-haiku-3.5` — ❌ пустой ответ
+- `claude-sonnet-4-thinking` — ❌ пустой ответ
+- GPT-модели — ❌ 402 квота
+- **НЕ использовать** ID с дефисом: `claude-opus-4-7`, `claude-sonnet-4-7` — неверные
 
 ## Rate-limit наблюдения
 
