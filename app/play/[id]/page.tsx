@@ -35,7 +35,10 @@ export default function Player() {
   const [loading, setLoading] = useState(true);
   const [startTime, setStartTime] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [timerSec, setTimerSec] = useState(0);
+  const [attempts, setAttempts] = useState(1);
   const containerRef = useRef<HTMLDivElement>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     fetch(`/api/sets/${id}`)
@@ -55,6 +58,36 @@ export default function Player() {
     document.addEventListener("fullscreenchange", onChange);
     return () => document.removeEventListener("fullscreenchange", onChange);
   }, []);
+
+  // Load play settings
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("gs_play_settings");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (typeof parsed.timerSec === "number") setTimerSec(parsed.timerSec);
+        if (typeof parsed.attempts === "number") setAttempts(parsed.attempts);
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  // Save play settings
+  useEffect(() => {
+    localStorage.setItem("gs_play_settings", JSON.stringify({ timerSec, attempts }));
+  }, [timerSec, attempts]);
+
+  // Auto-flip timer
+  useEffect(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    if (!timerSec || flipped || done || !set) return;
+    timerRef.current = setTimeout(() => setFlipped(true), timerSec * 1000);
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [timerSec, flipped, done, current, set]);
 
   // Keyboard shortcuts (для учителя на доске)
   useEffect(() => {
@@ -320,6 +353,20 @@ export default function Player() {
       <div className="flex gap-3 mt-8 text-xs text-amber-700/60">
         <button onClick={shuffle} className="hover:text-amber-700 transition">
           🔀 Перемешать
+        </button>
+        <button
+          onClick={() => setTimerSec((s) => (s === 0 ? 15 : s === 15 ? 30 : s === 30 ? 60 : 0))}
+          className="hover:text-amber-700 transition"
+          title="Время на просмотр карточки"
+        >
+          ⏱ {timerSec ? `${timerSec}с` : "∞"}
+        </button>
+        <button
+          onClick={() => setAttempts((a) => (a >= 3 ? 1 : a + 1))}
+          className="hover:text-amber-700 transition"
+          title="Попытки (пока только UI)"
+        >
+          🔁 {attempts}
         </button>
         <button onClick={toggleFullscreen} className="hover:text-amber-700 transition">
           {isFullscreen ? "⤓ Выйти" : "⛶ На весь экран"}
