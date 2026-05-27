@@ -215,72 +215,120 @@ async function callOpenAiCompatible(
   console.error(`[Scarlex] POST ${url} model=${config.model}`);
   console.error(`[Scarlex] Prompt (first 800 chars):\n${prompt.slice(0, 800)}...`);
 
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      Authorization: `Bearer ${config.apiKey}`,
-    },
-    body: JSON.stringify({
-      model: config.model,
-      temperature: 0.4,
-      stream: false,
-      max_tokens: 4096,
-      messages: [
-        {
-          role: "system",
-          content:
-            "Ты методист. Ответь JSON-массивом карточек [{question,answer,source,difficulty}] без пояснений.",
-        },
-        { role: "user", content: prompt },
-      ],
-    }),
-  });
+  const MAX_RETRIES = 3;
+  const BACKOFF_MS = [1000, 3000, 9000];
 
-  console.error(`[Scarlex] Response status: ${res.status}`);
-
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    console.error(`[Scarlex] Error body (first 500):\n${body.slice(0, 500)}`);
-    throw new Error(`OpenAI-compatible chat failed: ${res.status}`);
-  }
-
-  // Scarlex ВСЕГДА возвращает SSE (chat.completion.chunk), даже при stream:false
-  const bodyText = await res.text();
-  console.error(`[Scarlex] Raw body (first 500 chars):\n${bodyText.slice(0, 500)}...`);
-
-  const parts: string[] = [];
-  for (const line of bodyText.trim().split("\n")) {
-    const t = line.trim();
-    if (!t.startsWith("data:")) continue;
-    const payload = t.slice(5).trim();
-    if (payload === "[DONE]") break;
-    try {
-      const obj = JSON.parse(payload) as {
-        choices?: { delta?: { content?: string }; finish_reason?: string | null }[];
-      };
-      const content = obj.choices?.[0]?.delta?.content ?? "";
-      parts.push(content);
-    } catch {
-      // игнорируем битые строки
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    if (attempt > 1) {
+      console.error(`[Scarlex] Retry attempt ${attempt}/${MAX_RETRIES}`);
     }
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Authorization: `Bearer ${config.apiKey}`,
+      },
+      body: JSON.stringify({
+        model: config.model,
+        temperature: 0.4,
+        stream: false,
+        max_tokens: 4096,
+        messages: [
+          {
+            role: "system",
+            content:
+              "Ты методист. Ответь JSON-массивом карточек [{question,answer,source,difficulty}] без пояснений.",
+          },
+          { role: "user", content: prompt },
+        ],
+      }),
+    });
+
+    console.error(`[Scarlex] Response status: ${res.status} (attempt ${attempt}/${MAX_RETRIES})`);
+
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      console.error(`[Scarlex] Error body (first 500):\n${body.slice(0, 500)}`);
+
+      if (res.status === 429 && attempt < MAX_RETRIES) {
+        const retryAfter = res.headers.get("Retry-After");
+        let delay: number;
+        if (retryAfter) {
+          delay = parseInt(retryAfter, 10) * 1000;
+          console.error(`[Scarlex] 429 → waiting ${delay}ms (Retry-After)`);
+        } else {
+          delay = BACKOFF_MS[attempt - 1];
+          console.error(`[Scarlex] 429 → waiting ${delay}ms (backoff)`);
+        }
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        continue;
+      }
+
+      if (res.status === 429) {
+        throw new Error("Scarlex rate-limited 3 retries");
+      }
+
+      throw new Error(`OpenAI-compatible chat failed: ${res.status}`);
+    }
+
+    // Scarlex ВСЕГДА возвращает SSE (chat.completion.chunk), даже при stream:false
+    const bodyText = await res.text();
+    console.error(`[Scarlex] Raw body (first 500 chars):\n${bodyText.slice(0, 500)}...`);
+
+    const parts: string[] = [];
+    for (const line of bodyText.trim().split("\n")) {
+      const t = line.trim();
+      if (!t.startsWith("data:")) continue;
+      const payload = t.slice(5).trim();
+      if (payload === "[DONE]") break;
+      try {
+        const obj = JSON.parse(payload) as {
+          choices?: { delta?: { content?: string }; finish_reason?: string | null }[];
+        };
+        const content = obj.choices?.[0]?.delta?.content ?? "";
+        parts.push(content);
+      } catch {
+        // игнорируем битые строки
+      }
+    }
+
+    const raw = parts.join("").trim();
+    console.error(`[Scarlex] Extracted content (first 800 chars):\n${raw.slice(0, 800)}...`);
+
+    if (!raw) {
+      if (attempt < MAX_RETRIES) {
+        console.error(`[Scarlex] Empty completion → retry ${attempt + 1}/${MAX_RETRIES}`);
+        await new Promise((resolve) => setTimeout(resolve, BACKOFF_MS[attempt - 1]));
+        continue;
+      }
+      throw new Error("Empty completion");
+    }
+
+    const jsonText = extractJson(raw);
+    const parsed = CardDraftArraySchema.safeParse(JSON.parse(jsonText));
+    if (!parsed.success) {
+      console.error(`[Scarlex] Schema validation failed. Extracted JSON:\n${jsonText.slice(0, 500)}`);
+      if (attempt < MAX_RETRIES) {
+        console.error(`[Scarlex] Schema error → retry ${attempt + 1}/${MAX_RETRIES}`);
+        await new Promise((resolve) => setTimeout(resolve, BACKOFF_MS[attempt - 1]));
+        continue;
+      }
+      throw new Error("LLM response failed schema validation");
+    }
+
+    const debug: LlmDebug = {
+      prompt: prompt.slice(0, 2000),
+      url,
+      status: res.status,
+      rawResponse: raw.slice(0, 2000),
+    };
+    return { cards: parsed.data, debug };
   }
 
-  const raw = parts.join("").trim();
-  console.error(`[Scarlex] Extracted content (first 800 chars):\n${raw.slice(0, 800)}...`);
-
-  if (!raw) throw new Error("Empty completion");
-
-  const jsonText = extractJson(raw);
-  const parsed = CardDraftArraySchema.safeParse(JSON.parse(jsonText));
-  if (!parsed.success) {
-    console.error(`[Scarlex] Schema validation failed. Extracted JSON:\n${jsonText.slice(0, 500)}`);
-    throw new Error("LLM response failed schema validation");
-  }
-
-  const debug: LlmDebug = { prompt: prompt.slice(0, 2000), url, status: res.status, rawResponse: raw.slice(0, 2000) };
-  return { cards: parsed.data, debug };
+  // Should never reach here, but just in case
+  throw new Error("Scarlex rate-limited 3 retries");
 }
 
 function buildPrompt(input: GenerateInput): string {
