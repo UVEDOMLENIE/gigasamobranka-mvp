@@ -173,7 +173,7 @@ export default function Home() {
 
       const responseData = (await res.json()) as { setId: string; usedMock?: boolean; reason?: string; debug?: unknown; provider?: string };
       // eslint-disable-next-line no-console
-      console.error("[/api/generate response]", JSON.stringify(responseData, null, 2));
+      console.log("[/api/generate response]", JSON.stringify(responseData, null, 2));
       const { setId, usedMock, reason, debug } = responseData;
       if (usedMock) {
         setWarning(`⚠️ Генерация в демо-режиме (без нейросети). ${reason || "Проверьте ключ в /settings"}`);
