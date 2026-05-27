@@ -171,7 +171,10 @@ export default function Home() {
         throw new Error((err as { error?: string }).error ?? `Ошибка сервера (${res.status})`);
       }
 
-      const { setId, usedMock, reason, debug } = (await res.json()) as { setId: string; usedMock?: boolean; reason?: string; debug?: unknown };
+      const responseData = (await res.json()) as { setId: string; usedMock?: boolean; reason?: string; debug?: unknown; provider?: string };
+      // eslint-disable-next-line no-console
+      console.error("[/api/generate response]", JSON.stringify(responseData, null, 2));
+      const { setId, usedMock, reason, debug } = responseData;
       if (usedMock) {
         setWarning(`⚠️ Генерация в демо-режиме (без нейросети). ${reason || "Проверьте ключ в /settings"}`);
       }

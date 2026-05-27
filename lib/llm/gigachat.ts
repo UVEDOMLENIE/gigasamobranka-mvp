@@ -69,7 +69,7 @@ export async function generateCards(
     } catch (err) {
       const reason = err instanceof Error ? err.message : "unknown scarlex error";
       console.error(`[generateCards/scarlex] fallback to mock: ${reason}`);
-      return { cards: mockGenerate(input), usedMock: true, reason, provider: "scarlex" };
+      return { cards: mockGenerate(input), usedMock: true, reason, provider: "scarlex", debug: { error: reason } };
     }
   }
 
