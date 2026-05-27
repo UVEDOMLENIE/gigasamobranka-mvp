@@ -155,8 +155,10 @@ function extractDefinitions(
   )) {
     const word = m[1].trim();
     const def = m[2].trim();
-    // Игнорируем markdown-ссылки и формулы
-    if (/\[.*?\]\(.*?\)/.test(m[0])) continue;
+    // Игнорируем markdown, ссылки, формулы
+    const md = /https?:\/\/|www\.|\[.*?\]\(.*?\)|\]\(|\*\*|__|~~|>|`{1,2}/;
+    if (md.test(m[0])) continue;
+    if (md.test(def)) continue;
     if (def.includes("$")) continue;
     cards.push({
       question: pickDefinitionQuestion(word, input),
@@ -172,7 +174,9 @@ function extractDefinitions(
   )) {
     const term = m[1].trim();
     const def = m[2].trim();
-    if (/\[.*?\]\(.*?\)/.test(m[0])) continue;
+    const md = /https?:\/\/|www\.|\[.*?\]\(.*?\)|\]\(|\*\*|__|~~|>|`{1,2}/;
+    if (md.test(m[0])) continue;
+    if (md.test(def)) continue;
     if (def.includes("$")) continue;
     cards.push({
       question: `Что такое «${term.toLowerCase()}»?`,
@@ -194,6 +198,7 @@ function extractFactSentences(
   const cards: CardDraft[] = [];
   const clean = text.replace(/\s+/g, " ").trim();
 
+  const mdRe = /https?:\/\/|www\.|\[.*?\]\(.*?\)|\]\(|\*\*|__|~~|>|`{1,2}/;
   const sentences = clean
     .split(/(?<=[.!?])\s+/)
     .map((s) => s.trim())
@@ -202,7 +207,11 @@ function extractFactSentences(
     .filter((s) => !/^\d+\s*[+\-×x*/:]/.test(s))
     .filter((s) => !/умножить\s+на\s*\d/i.test(s))
     .filter((s) => !/—\s*это\s+/.test(s))
-    .filter((s) => !s.startsWith("#"));
+    .filter((s) => !s.startsWith("#"))
+    .filter((s) => !mdRe.test(s))
+    .filter((s) => !s.startsWith("💡"))
+    .filter((s) => !s.startsWith("["))
+    .filter((s) => !s.startsWith("**"));
 
   const usedKeywords = new Set<string>();
 
