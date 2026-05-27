@@ -63,7 +63,7 @@ export async function generateCards(
           process.env.SCARLEX_BASE_URL ??
           process.env.OPENAI_BASE_URL ??
           "https://api.scarlex.ru/v1",
-        model: runtime?.model ?? process.env.SCARLEX_MODEL ?? "claude-sonnet-4-7",
+        model: runtime?.model ?? process.env.SCARLEX_MODEL ?? "claude-haiku-4-7",
       });
       return { cards, usedMock: false, provider: "scarlex", debug };
     } catch (err) {
@@ -246,26 +246,28 @@ async function callOpenAiCompatible(
     throw new Error(`OpenAI-compatible chat failed: ${res.status}`);
   }
 
-  // Scarlex может вернуть SSE даже при stream:false — парсим оба формата
+  // Scarlex ВСЕГДА возвращает SSE (chat.completion.chunk), даже при stream:false
   const bodyText = await res.text();
   console.error(`[Scarlex] Raw body (first 500 chars):\n${bodyText.slice(0, 500)}...`);
 
-  let json: { choices?: { message?: { content?: string } }[] };
-  try {
-    // Пробуем обычный JSON
-    json = JSON.parse(bodyText);
-  } catch {
-    // Fallback: парсим SSE — ищем data: {...}
-    const dataLine = bodyText
-      .split("\n")
-      .find((line) => line.trim().startsWith("data:"));
-    if (!dataLine) throw new Error("No JSON or SSE data in response");
-    const jsonPart = dataLine.replace(/^data:\s*/, "").trim();
-    if (jsonPart === "[DONE]") throw new Error("SSE returned [DONE] without data");
-    json = JSON.parse(jsonPart);
+  const parts: string[] = [];
+  for (const line of bodyText.trim().split("\n")) {
+    const t = line.trim();
+    if (!t.startsWith("data:")) continue;
+    const payload = t.slice(5).trim();
+    if (payload === "[DONE]") break;
+    try {
+      const obj = JSON.parse(payload) as {
+        choices?: { delta?: { content?: string }; finish_reason?: string | null }[];
+      };
+      const content = obj.choices?.[0]?.delta?.content ?? "";
+      parts.push(content);
+    } catch {
+      // игнорируем битые строки
+    }
   }
 
-  const raw = json.choices?.[0]?.message?.content?.trim() ?? "";
+  const raw = parts.join("").trim();
   console.error(`[Scarlex] Extracted content (first 800 chars):\n${raw.slice(0, 800)}...`);
 
   if (!raw) throw new Error("Empty completion");
