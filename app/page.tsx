@@ -219,6 +219,15 @@ export default function Home() {
           </div>
         </div>
 
+        <div className="text-center mb-3">
+          <a
+            href="/library"
+            className="text-xs text-amber-700 hover:text-amber-900 underline decoration-dotted"
+          >
+            📚 Мои сохранённые наборы →
+          </a>
+        </div>
+
         {/* Разделитель */}
         <div className="text-center text-xs text-amber-700/50 my-6">
           ── или составь свой набор ──
