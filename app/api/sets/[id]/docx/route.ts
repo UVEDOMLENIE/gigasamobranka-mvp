@@ -62,7 +62,7 @@ export async function GET(_req: NextRequest, ctx: RouteCtx) {
 
     const buf = await Packer.toBuffer(doc);
     const filename = `${(set.topic || "набор").replace(/[^\w\s-а-яА-ЯёЁ]/g, "").trim() || "набор"}.docx`;
-    return new NextResponse(buf, {
+    return new NextResponse(new Uint8Array(buf), {
       headers: {
         "Content-Type":
           "application/vnd.openxmlformats-officedocument.wordprocessingml.document",

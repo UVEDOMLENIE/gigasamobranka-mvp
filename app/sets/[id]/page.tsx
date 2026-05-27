@@ -33,7 +33,7 @@ export default function SetEditor() {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [genInfo, setGenInfo] = useState<{ provider?: string; usedMock?: boolean }>({});
-  const [debugLog, setDebugLog] = useState<unknown>(null);
+  const [debugLog, setDebugLog] = useState<Record<string, unknown> | null>(null);
   const [showDebug, setShowDebug] = useState(false);
 
   useEffect(() => {
