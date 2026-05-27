@@ -5,8 +5,9 @@ import { mockGenerate } from "./mock";
 
 /**
  * Главная точка генерации карточек.
- * Если USE_MOCK_LLM=true или ключа нет — возвращаем mock-карточки.
- * Если реальный API падает — тоже fallback на mock. Демо не должно умирать.
+ * Default: mock (если ничего не выбрано — демо работает без ключа).
+ * Если выбран scarlex/gigachat, но ключ пустой — fallback на mock.
+ * Если реальный API падает — тоже fallback на mock.
  */
 export async function generateCards(
   input: GenerateInput,
@@ -22,16 +23,13 @@ export async function generateCards(
     | "scarlex"
     | "gigachat"
     | undefined;
-  const provider = runtime?.provider ?? envProvider ?? "gigachat";
+  const provider = runtime?.provider ?? envProvider ?? "mock";
 
-  if (
-    provider === "mock" ||
-    (!runtime?.provider && !envProvider && process.env.USE_MOCK_LLM === "true")
-  ) {
+  if (provider === "mock") {
     return {
       cards: mockGenerate(input),
       usedMock: true,
-      reason: provider === "mock" ? "provider=mock" : "USE_MOCK_LLM=true",
+      reason: "provider=mock",
       provider: "mock",
     };
   }

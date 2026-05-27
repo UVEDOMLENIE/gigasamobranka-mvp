@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
       sources: [{ filename: `${demo.label}.txt`, text: demo.text }],
     };
 
-    const { cards: drafts } = await generateCards(input);
+    const { cards: drafts } = await generateCards(input, { provider: "mock" });
     const db = getDb();
     const setId = uuid();
 

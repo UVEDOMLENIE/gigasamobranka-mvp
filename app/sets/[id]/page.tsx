@@ -20,6 +20,7 @@ type SetData = {
   subject: string | null;
   grade: string | null;
   topic: string | null;
+  settings: string;
   cards: Card[];
 };
 
@@ -31,6 +32,7 @@ export default function SetEditor() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [genInfo, setGenInfo] = useState<{ provider?: string; usedMock?: boolean }>({});
 
   useEffect(() => {
     fetch(`/api/sets/${id}`)
@@ -38,6 +40,12 @@ export default function SetEditor() {
       .then((data: SetData) => {
         setSet(data);
         setCards(data.cards ?? []);
+        try {
+          const s = JSON.parse(data.settings || "{}");
+          setGenInfo({ provider: s.provider, usedMock: s.usedMock });
+        } catch {
+          setGenInfo({});
+        }
       })
       .catch(() => setError("Не удалось загрузить набор"));
   }, [id]);
@@ -139,7 +147,14 @@ export default function SetEditor() {
           <h1 className="text-xl font-bold text-amber-900">
             {set.subject} · {set.grade} кл. · {set.topic}
           </h1>
-          <p className="text-sm text-gray-500">{cards.length} карточек</p>
+          <p className="text-sm text-gray-500">
+            {cards.length} карточек
+            {genInfo.provider && (
+              <span className={`ml-2 text-xs rounded-full px-2 py-0.5 ${genInfo.usedMock ? "bg-amber-100 text-amber-700" : "bg-green-100 text-green-700"}`}>
+                {genInfo.usedMock ? `⚠️ ${genInfo.provider}` : `✓ ${genInfo.provider}`}
+              </span>
+            )}
+          </p>
         </div>
 
         {/* Статус сохранения */}

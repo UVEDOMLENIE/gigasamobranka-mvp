@@ -157,6 +157,9 @@ export default function Home() {
       } = { subject, grade, topic, count, difficulty, sources };
       if (llmSettings) payload.llm = llmSettings;
 
+      // eslint-disable-next-line no-console
+      console.log("[generate] payload.llm =", payload.llm);
+
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
