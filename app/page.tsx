@@ -178,12 +178,6 @@ export default function Home() {
           <p className="mt-2 text-amber-700 text-base">
             Открыл учебник — карточки накрыли стол сами
           </p>
-          <a
-            href="/settings"
-            className="mt-3 inline-flex rounded-full border border-amber-200 bg-white/70 px-3 py-1 text-xs font-medium text-amber-800 hover:bg-white"
-          >
-            LLM: {llmSettings?.provider === "scarlex" ? "Scarlex" : llmSettings?.provider === "gigachat" ? "GigaChat" : "Mock"} · настройки
-          </a>
         </div>
 
         {/* Демо: один клик → сразу карточки */}
@@ -386,9 +380,14 @@ export default function Home() {
           </button>
         </form>
 
-        <p className="text-center text-xs text-amber-700/60 mt-8">
-          ГигаСамобранка · Хакатон СберОбразование × Школа 21
-        </p>
+        <div className="text-center text-xs text-amber-700/60 mt-8 space-y-1">
+          <p>ГигаСамобранка · Хакатон СберОбразование × Школа 21</p>
+          <p>
+            <a href="/settings" className="underline decoration-dotted hover:text-amber-800">
+              LLM: {llmSettings?.provider === "scarlex" ? "Scarlex" : llmSettings?.provider === "gigachat" ? "GigaChat" : "Mock"} · настройки
+            </a>
+          </p>
+        </div>
       </div>
     </main>
   );
