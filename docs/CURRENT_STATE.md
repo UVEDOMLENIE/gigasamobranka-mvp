@@ -38,8 +38,12 @@
 | Mindmap | ❌ | Только roadmap-идея |
 | Fork наборов | ❌ | Не реализовано |
 | Реальный LLM по умолчанию | ⚠️ | Scarlex rate-limited; retry с backoff добавлен |
-| Деплой | ❌ | Только локально; Vercel требует `vercel login` |
+| Деплой | ✅ | Vercel: https://gs-mvp-six.vercel.app |
+
+## Live URL
+
+**Production:** https://gs-mvp-six.vercel.app
 
 ## Последний известный рабочий коммит
 
-`b794d38` — S02 T1-T3, T8, T9 выполнены; smoke green 13/13.
+`a021f89` — Vercel prod с SQLite /tmp + auto-migrate; smoke green 13/13.

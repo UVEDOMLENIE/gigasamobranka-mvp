@@ -39,6 +39,11 @@ local.db
 *.db-shm
 *.db-wal
 
+# temp env files
+/tmp
+tmp*.txt
+Ctmp*
+
 # vercel
 .vercel
 
