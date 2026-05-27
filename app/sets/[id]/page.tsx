@@ -243,8 +243,14 @@ export default function SetEditor() {
           >
             🖨 Печать
           </button>
+          <a
+            href={`/api/sets/${id}/docx`}
+            className="text-sm border border-gray-200 text-gray-600 hover:bg-gray-50 rounded-lg px-4 py-2 inline-flex items-center"
+          >
+            📄 DOCX
+          </a>
           <button
-            onClick={() => router.push(`/sets/${id}/results`)}
+            onClick={() => router.push(`/sets/${id}/results`)}</thinking>
             className="text-sm border border-gray-200 text-gray-600 hover:bg-gray-50 rounded-lg px-4 py-2"
           >
             📊 Результаты
