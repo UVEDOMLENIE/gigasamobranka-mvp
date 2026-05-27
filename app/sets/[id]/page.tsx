@@ -250,7 +250,7 @@ export default function SetEditor() {
             📄 DOCX
           </a>
           <button
-            onClick={() => router.push(`/sets/${id}/results`)}</thinking>
+            onClick={() => router.push(`/sets/${id}/results`)}
             className="text-sm border border-gray-200 text-gray-600 hover:bg-gray-50 rounded-lg px-4 py-2"
           >
             📊 Результаты
