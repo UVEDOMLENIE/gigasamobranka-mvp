@@ -41,6 +41,14 @@ const PROVIDER_DEFAULTS: Record<Provider, Partial<LlmSettings>> = {
   },
 };
 
+const SCARLEX_MODELS = [
+  { value: "claude-haiku-4-7", label: "claude-haiku-4-7 (рекомендуется)" },
+  { value: "claude-sonnet-4-7", label: "claude-sonnet-4-7" },
+  { value: "claude-opus-4-7", label: "claude-opus-4-7" },
+  { value: "gpt-4o", label: "gpt-4o" },
+  { value: "gpt-4o-mini", label: "gpt-4o-mini" },
+];
+
 export default function SettingsPage() {
   const [settings, setSettings] = useState<LlmSettings>(DEFAULT_SETTINGS);
   const [saved, setSaved] = useState(false);
@@ -136,12 +144,37 @@ export default function SettingsPage() {
                 </label>
                 <label className="block">
                   <span className="mb-1 block text-sm font-medium text-gray-700">Model</span>
-                  <input
-                    value={settings.model}
-                    onChange={(e) => update("model", e.target.value)}
+                  <select
+                    value={SCARLEX_MODELS.some((m) => m.value === settings.model) ? settings.model : "custom"}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      update("model", val === "custom" ? "" : val);
+                    }}
                     className="w-full rounded-xl border border-amber-200 px-4 py-3 outline-none focus:border-amber-500"
-                  />
+                  >
+                    {SCARLEX_MODELS.map((m) => (
+                      <option key={m.value} value={m.value}>
+                        {m.label}
+                      </option>
+                    ))}
+                    <option value="custom">Своя модель</option>
+                  </select>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Для Scarlex рекомендуется haiku — остальные часто лежат или 429.
+                  </p>
                 </label>
+
+                {!SCARLEX_MODELS.some((m) => m.value === settings.model) && (
+                  <label className="block">
+                    <span className="mb-1 block text-sm font-medium text-gray-700">Название модели</span>
+                    <input
+                      value={settings.model}
+                      onChange={(e) => update("model", e.target.value)}
+                      placeholder="my-custom-model"
+                      className="w-full rounded-xl border border-amber-200 px-4 py-3 outline-none focus:border-amber-500"
+                    />
+                  </label>
+                )}
               </div>
             )}
 
