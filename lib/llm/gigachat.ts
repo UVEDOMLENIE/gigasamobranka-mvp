@@ -244,11 +244,27 @@ async function callOpenAiCompatible(
     throw new Error(`OpenAI-compatible chat failed: ${res.status}`);
   }
 
-  const json = (await res.json()) as {
-    choices: { message: { content: string } }[];
-  };
+  // Scarlex может вернуть SSE даже при stream:false — парсим оба формата
+  const bodyText = await res.text();
+  console.error(`[Scarlex] Raw body (first 500 chars):\n${bodyText.slice(0, 500)}...`);
+
+  let json: { choices?: { message?: { content?: string } }[] };
+  try {
+    // Пробуем обычный JSON
+    json = JSON.parse(bodyText);
+  } catch {
+    // Fallback: парсим SSE — ищем data: {...}
+    const dataLine = bodyText
+      .split("\n")
+      .find((line) => line.trim().startsWith("data:"));
+    if (!dataLine) throw new Error("No JSON or SSE data in response");
+    const jsonPart = dataLine.replace(/^data:\s*/, "").trim();
+    if (jsonPart === "[DONE]") throw new Error("SSE returned [DONE] without data");
+    json = JSON.parse(jsonPart);
+  }
+
   const raw = json.choices?.[0]?.message?.content?.trim() ?? "";
-  console.error(`[Scarlex] Raw response (first 800 chars):\n${raw.slice(0, 800)}...`);
+  console.error(`[Scarlex] Extracted content (first 800 chars):\n${raw.slice(0, 800)}...`);
 
   if (!raw) throw new Error("Empty completion");
 
