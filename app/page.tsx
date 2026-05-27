@@ -161,7 +161,10 @@ export default function Home() {
         throw new Error((err as { error?: string }).error ?? `Ошибка сервера (${res.status})`);
       }
 
-      const { setId } = (await res.json()) as { setId: string };
+      const { setId, usedMock, reason } = (await res.json()) as { setId: string; usedMock?: boolean; reason?: string };
+      if (usedMock) {
+        setWarning(`⚠️ Генерация в демо-режиме (без нейросети). ${reason || "Проверьте ключ в /settings"}`);
+      }
       router.push(`/sets/${setId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Неизвестная ошибка");
