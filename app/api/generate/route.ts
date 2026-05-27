@@ -6,6 +6,7 @@ import { generateCards } from "@/lib/llm/gigachat";
 import { GenerateInputSchema, RuntimeLlmSettingsSchema } from "@/lib/llm/types";
 import { uuid, shortKey } from "@/lib/id";
 import { checkRateLimit, llmHourLimit } from "@/lib/rate-limit";
+import { backupDb } from "@/lib/db/blob-sync";
 
 export async function POST(req: NextRequest) {
   try {
@@ -83,6 +84,7 @@ export async function POST(req: NextRequest) {
 
     await db.insert(cards).values(cardRows);
 
+    await backupDb();
     return NextResponse.json({ setId, usedMock, count: cardRows.length, reason, debug });
   } catch (err) {
     console.error("[/api/generate]", err);

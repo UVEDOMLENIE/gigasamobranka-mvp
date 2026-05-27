@@ -2,11 +2,12 @@ import "server-only";
 import { createClient, type Client } from "@libsql/client";
 import { drizzle } from "drizzle-orm/libsql";
 import * as schema from "./schema";
+import { restoreDb } from "./blob-sync";
 
 /**
  * Один клиент БД для dev и prod.
  *   - Локально: DATABASE_URL=file:./local.db (libsql работает с локальным файлом, без native compile)
- *   - Prod (Vercel serverless): file:/tmp/local.db — /tmp writeable, но не персистентен между деплоями
+ *   - Prod (Vercel serverless): file:/tmp/local.db + restore from Vercel Blob
  *   - Prod (Turso): DATABASE_URL=libsql://<name>.turso.io  + DATABASE_AUTH_TOKEN
  * better-sqlite3 не используем сознательно: native build боится кириллицы/`!` в пути и Vercel-serverless.
  */
@@ -79,6 +80,7 @@ async function autoMigrate(client: Client) {
 
 export async function getDb(): Promise<Db> {
   if (!cached) {
+    if (process.env.VERCEL) await restoreDb();
     cachedClient = buildClient();
     await autoMigrate(cachedClient);
     cached = drizzle(cachedClient, { schema });
@@ -88,6 +90,7 @@ export async function getDb(): Promise<Db> {
 
 export async function getRawClient(): Promise<Client> {
   if (!cachedClient) {
+    if (process.env.VERCEL) await restoreDb();
     cachedClient = buildClient();
     await autoMigrate(cachedClient);
   }

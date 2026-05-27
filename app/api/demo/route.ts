@@ -6,6 +6,7 @@ import { findDemo } from "@/lib/demo-materials";
 import { uuid, shortKey } from "@/lib/id";
 import { generateCards } from "@/lib/llm/gigachat";
 import { checkRateLimit, llmHourLimit } from "@/lib/rate-limit";
+import { backupDb } from "@/lib/db/blob-sync";
 
 function getRequestOrigin(req: NextRequest) {
   const host =
@@ -78,6 +79,7 @@ export async function GET(req: NextRequest) {
       })),
     );
 
+    await backupDb();
     return NextResponse.redirect(new URL(`/sets/${setId}`, origin), 303);
   } catch (err) {
     console.error("[/api/demo]", err);

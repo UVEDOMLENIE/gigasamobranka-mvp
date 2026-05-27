@@ -3,6 +3,7 @@ import { getDb } from "@/lib/db/client";
 import { sessions, answers } from "@/lib/db/schema";
 import { uuid } from "@/lib/id";
 import { eq } from "drizzle-orm";
+import { backupDb } from "@/lib/db/blob-sync";
 
 // POST /api/sessions — создать новую сессию ученика
 export async function POST(req: NextRequest) {
@@ -23,6 +24,7 @@ export async function POST(req: NextRequest) {
       studentName: studentName.trim(),
     });
 
+    await backupDb();
     return NextResponse.json({ sessionId });
   } catch (err) {
     console.error("[/api/sessions POST]", err);
@@ -52,6 +54,7 @@ export async function PATCH(req: NextRequest) {
       timeMs,
     });
 
+    await backupDb();
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("[/api/sessions PATCH]", err);
@@ -72,6 +75,7 @@ export async function PUT(req: NextRequest) {
       .set({ finishedAt: Math.floor(Date.now() / 1000) })
       .where(eq(sessions.id, sessionId));
 
+    await backupDb();
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("[/api/sessions PUT]", err);

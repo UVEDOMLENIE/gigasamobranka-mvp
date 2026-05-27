@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { getDb } from "@/lib/db/client";
 import { sets, cards } from "@/lib/db/schema";
 import { eq, asc } from "drizzle-orm";
+import { backupDb } from "@/lib/db/blob-sync";
 
 type RouteCtx = RouteContext<"/api/sets/[id]">;
 
@@ -67,6 +68,7 @@ export async function PUT(req: NextRequest, ctx: RouteCtx) {
       .set({ updatedAt: Math.floor(Date.now() / 1000) })
       .where(eq(sets.id, id));
 
+    await backupDb();
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("[PUT /api/sets/[id]]", err);
@@ -91,6 +93,7 @@ export async function DELETE(_req: NextRequest, ctx: RouteCtx) {
 
     await db.delete(sets).where(eq(sets.id, id));
     // cards удалятся автоматически по cascade
+    await backupDb();
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("[DELETE /api/sets/[id]]", err);
