@@ -174,11 +174,12 @@ async function callGigaChat(
     body: JSON.stringify({
       model: config.model ?? "GigaChat",
       temperature: 0.4,
+      max_tokens: 4096,
       messages: [
         {
           role: "system",
           content:
-            "Ты — методист российской школы. Возвращай только валидный JSON-массив.",
+            "Ты методист. Ответь JSON-массивом карточек [{question,answer,source,difficulty}] без пояснений.",
         },
         { role: "user", content: prompt },
       ],
@@ -225,11 +226,12 @@ async function callOpenAiCompatible(
       model: config.model,
       temperature: 0.4,
       stream: false,
+      max_tokens: 4096,
       messages: [
         {
           role: "system",
           content:
-            "Ты — методист российской школы. Возвращай только валидный JSON-массив.",
+            "Ты методист. Ответь JSON-массивом карточек [{question,answer,source,difficulty}] без пояснений.",
         },
         { role: "user", content: prompt },
       ],
@@ -281,23 +283,14 @@ async function callOpenAiCompatible(
 
 function buildPrompt(input: GenerateInput): string {
   const context = input.sources
-    .map((s) => `Файл: ${s.filename}\n${s.text.slice(0, 8000)}`)
+    .map((s) => `${s.filename}:\n${s.text.slice(0, 2000)}`)
     .join("\n---\n");
   return [
-    `Сгенерируй ровно ${input.count} учебных карточек на тему «${input.topic}»`,
-    `для ${input.grade} класса по предмету ${input.subject}.`,
-    `Уровень сложности: ${input.difficulty}.`,
-    "Используй только материал ниже. Если в материале есть формулы — сохрани их в LaTeX между $...$.",
-    "Каждая карточка: { question, answer, source, difficulty }.",
-    'difficulty ∈ { "easy", "medium", "hard" }.',
-    "source — имя файла или короткая цитата куска, на котором основан вопрос.",
-    "Верни строго JSON-массив без пояснений.",
-    "",
-    "Материал:",
-    "---",
+    `Сгенерируй ${input.count} учебных карточек: тема «${input.topic}», ${input.grade} класс, ${input.subject}, сложность ${input.difficulty}.`,
+    'Формат: [{"question","answer","source","difficulty"}].',
+    'difficulty: easy|medium|hard. source — имя файла.',
     context,
-    "---",
-  ].join("\n");
+  ].join("\n\n");
 }
 
 function extractJson(text: string): string {
