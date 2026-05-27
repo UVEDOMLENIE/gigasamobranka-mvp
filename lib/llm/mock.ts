@@ -22,6 +22,12 @@ export function mockGenerate(input: GenerateInput): CardDraft[] {
     return true;
   });
 
+  // Если извлечено < 3 карточек — скорее всего мусор (markdown-ссылки, заголовки).
+  // Очищаем и используем только честные общие карточки по теме.
+  if (unique.length < 3) {
+    unique.length = 0;
+  }
+
   // Дополняем общими вопросами по теме если не хватает
   let i = 0;
   while (unique.length < input.count) {
@@ -149,7 +155,8 @@ function extractDefinitions(
   )) {
     const word = m[1].trim();
     const def = m[2].trim();
-    // Игнорируем формулы (они уже обработаны)
+    // Игнорируем markdown-ссылки и формулы
+    if (/\[.*?\]\(.*?\)/.test(m[0])) continue;
     if (def.includes("$")) continue;
     cards.push({
       question: pickDefinitionQuestion(word, input),
@@ -165,6 +172,7 @@ function extractDefinitions(
   )) {
     const term = m[1].trim();
     const def = m[2].trim();
+    if (/\[.*?\]\(.*?\)/.test(m[0])) continue;
     if (def.includes("$")) continue;
     cards.push({
       question: `Что такое «${term.toLowerCase()}»?`,
@@ -193,7 +201,8 @@ function extractFactSentences(
     // Пропускаем уже обработанные шаблоны
     .filter((s) => !/^\d+\s*[+\-×x*/:]/.test(s))
     .filter((s) => !/умножить\s+на\s*\d/i.test(s))
-    .filter((s) => !/—\s*это\s+/.test(s));
+    .filter((s) => !/—\s*это\s+/.test(s))
+    .filter((s) => !s.startsWith("#"));
 
   const usedKeywords = new Set<string>();
 
