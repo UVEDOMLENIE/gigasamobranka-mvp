@@ -38,9 +38,10 @@ export async function backupDb(): Promise<void> {
     if (!existsSync(LOCAL_DB_PATH)) return;
     const buffer = readFileSync(LOCAL_DB_PATH);
     await put(BLOB_PATH, buffer, {
-      access: "private",
+      access: "public",
       token: process.env.BLOB_READ_WRITE_TOKEN,
       addRandomSuffix: false,
+      allowOverwrite: true,
     });
     console.log("[blob-sync] Backed up db to blob", buffer.length, "bytes");
   } catch (e) {

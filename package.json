@@ -12,7 +12,8 @@
     "db:push": "drizzle-kit push",
     "db:migrate": "node scripts/migrate.mjs",
     "db:studio": "drizzle-kit studio",
-    "smoke": "node scripts/smoke.mjs"
+    "smoke": "node scripts/smoke.mjs",
+    "persistence": "node scripts/persistence-test.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
