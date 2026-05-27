@@ -20,6 +20,7 @@ export async function POST(req: NextRequest) {
       );
 
     const items: { filename: string; text: string }[] = [];
+    const warnings: string[] = [];
     let totalChars = 0;
 
     for (const file of fileEntries) {
@@ -31,16 +32,27 @@ export async function POST(req: NextRequest) {
       }
 
       const buf = Buffer.from(await file.arrayBuffer());
-      const parsed = await parseFile(file.name, buf);
+      let parsed: { filename: string; text: string };
+      try {
+        parsed = await parseFile(file.name, buf);
+      } catch (err) {
+        const reason = err instanceof Error ? err.message : "неизвестная ошибка";
+        warnings.push(`Не удалось прочитать "${file.name}": ${reason}`);
+        continue;
+      }
 
-      let text = parsed.text.slice(0, Math.max(0, MAX_TEXT - totalChars));
+      const text = parsed.text.slice(0, Math.max(0, MAX_TEXT - totalChars));
+      if (!text.trim()) {
+        warnings.push(`Файл "${file.name}" не содержит извлекаемого текста`);
+        continue;
+      }
       totalChars += text.length;
       items.push({ filename: parsed.filename, text });
 
       if (totalChars >= MAX_TEXT) break;
     }
 
-    return NextResponse.json({ items });
+    return NextResponse.json({ items, warnings });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Ошибка парсинга";
     return NextResponse.json({ error: msg }, { status: 500 });

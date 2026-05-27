@@ -2,9 +2,21 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { DEMO_MATERIALS, type DemoMaterial } from "@/lib/demo-materials";
+import { DEMO_MATERIALS } from "@/lib/demo-materials";
 
 type Difficulty = "easy" | "medium" | "hard";
+type LlmProvider = "mock" | "scarlex" | "gigachat";
+type ClientLlmSettings = {
+  provider: LlmProvider;
+  apiKey?: string;
+  authKey?: string;
+  baseUrl?: string;
+  oauthUrl?: string;
+  scope?: string;
+  model?: string;
+};
+
+const LLM_SETTINGS_STORAGE_KEY = "gs_llm_settings_v1";
 
 const LOADING_PHRASES = [
   "📖 Читаю учебник…",
@@ -24,9 +36,10 @@ export default function Home() {
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingPhrase, setLoadingPhrase] = useState(LOADING_PHRASES[0]);
-  const [loadingDemo, setLoadingDemo] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [warning, setWarning] = useState<string | null>(null);
   const [filesPicked, setFilesPicked] = useState<File[]>([]);
+  const [llmSettings, setLlmSettings] = useState<ClientLlmSettings | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // прокручивающиеся фразы загрузки
@@ -40,36 +53,18 @@ export default function Home() {
     return () => clearInterval(t);
   }, [loading]);
 
-  async function generateFromDemo(demo: DemoMaterial) {
-    setError(null);
-    setLoadingDemo(demo.id);
-    setLoading(true);
-    try {
-      const body = {
-        subject: demo.subject,
-        grade: demo.grade,
-        topic: demo.topic,
-        count: demo.count,
-        difficulty: demo.difficulty,
-        sources: [{ filename: `${demo.label}.txt`, text: demo.text }],
-      };
-      const res = await fetch("/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error((err as { error?: string }).error ?? "Ошибка генерации");
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const raw = localStorage.getItem(LLM_SETTINGS_STORAGE_KEY);
+      if (!raw) return;
+      try {
+        setLlmSettings(JSON.parse(raw) as ClientLlmSettings);
+      } catch {
+        localStorage.removeItem(LLM_SETTINGS_STORAGE_KEY);
       }
-      const { setId } = (await res.json()) as { setId: string };
-      router.push(`/sets/${setId}`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка");
-      setLoading(false);
-      setLoadingDemo(null);
-    }
-  }
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   function onFilesChange() {
     const files = fileInputRef.current?.files;
@@ -84,6 +79,7 @@ export default function Home() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
+    setWarning(null);
 
     if (!subject.trim() || !grade.trim() || !topic.trim()) {
       setError("Заполните предмет, класс и тему");
@@ -103,14 +99,18 @@ export default function Home() {
           method: "POST",
           body: uploadData,
         });
-        if (!uploadRes.ok) {
-          const err = await uploadRes.json().catch(() => ({}));
-          throw new Error((err as { error?: string }).error ?? "Ошибка загрузки файлов");
-        }
-        const { items } = (await uploadRes.json()) as {
+        const uploadJson = (await uploadRes.json().catch(() => ({}))) as {
+          error?: string;
           items: { filename: string; text: string }[];
+          warnings?: string[];
         };
-        sources.push(...items);
+        if (!uploadRes.ok) {
+          throw new Error(uploadJson.error ?? "Ошибка загрузки файлов");
+        }
+        if (uploadJson.warnings?.length) {
+          setWarning(uploadJson.warnings.join("\n"));
+        }
+        sources.push(...(uploadJson.items ?? []));
       }
 
       const trimmed = text.trim();
@@ -121,10 +121,21 @@ export default function Home() {
         sources.push({ filename: "вставленный текст", text: trimmed });
       }
 
+      const payload: {
+        subject: string;
+        grade: string;
+        topic: string;
+        count: number;
+        difficulty: Difficulty;
+        sources: { filename: string; text: string }[];
+        llm?: ClientLlmSettings;
+      } = { subject, grade, topic, count, difficulty, sources };
+      if (llmSettings) payload.llm = llmSettings;
+
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subject, grade, topic, count, difficulty, sources }),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
@@ -167,6 +178,12 @@ export default function Home() {
           <p className="mt-2 text-amber-700 text-base">
             Открыл учебник — карточки накрыли стол сами
           </p>
+          <a
+            href="/settings"
+            className="mt-3 inline-flex rounded-full border border-amber-200 bg-white/70 px-3 py-1 text-xs font-medium text-amber-800 hover:bg-white"
+          >
+            LLM: {llmSettings?.provider === "scarlex" ? "Scarlex" : llmSettings?.provider === "gigachat" ? "GigaChat" : "Mock"} · настройки
+          </a>
         </div>
 
         {/* Демо: один клик → сразу карточки */}
@@ -176,24 +193,15 @@ export default function Home() {
           </p>
           <div className="flex flex-wrap gap-2 justify-center">
             {DEMO_MATERIALS.map((d) => {
-              const isLoadingThis = loadingDemo === d.id;
               return (
-                <button
+                <a
                   key={d.id}
-                  type="button"
-                  disabled={loading}
-                  onClick={() => generateFromDemo(d)}
-                  className="text-sm bg-white border border-amber-200 hover:border-amber-400 hover:bg-amber-50 disabled:opacity-50 rounded-xl px-3 py-2 transition shadow-sm flex items-center gap-1.5"
+                  href={`/api/demo?id=${encodeURIComponent(d.id)}`}
+                  className="text-sm bg-white border border-amber-200 hover:border-amber-400 hover:bg-amber-50 rounded-xl px-3 py-2 transition shadow-sm flex items-center gap-1.5"
                 >
                   <span className="text-base">{d.emoji}</span>
                   <span>{d.label}</span>
-                  {isLoadingThis && (
-                    <svg className="animate-spin h-3 w-3 text-amber-600" viewBox="0 0 24 24" fill="none">
-                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeOpacity="0.3" />
-                      <path d="M12 2 A 10 10 0 0 1 22 12" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-                    </svg>
-                  )}
-                </button>
+                </a>
               );
             })}
           </div>
@@ -349,6 +357,12 @@ export default function Home() {
           {error && (
             <div className="text-sm text-red-700 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
               {error}
+            </div>
+          )}
+
+          {warning && (
+            <div className="whitespace-pre-line text-sm text-amber-800 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+              {warning}
             </div>
           )}
 

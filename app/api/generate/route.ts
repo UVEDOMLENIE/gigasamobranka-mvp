@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { getDb } from "@/lib/db/client";
 import { sets, cards } from "@/lib/db/schema";
 import { generateCards } from "@/lib/llm/gigachat";
-import { GenerateInputSchema } from "@/lib/llm/types";
+import { GenerateInputSchema, RuntimeLlmSettingsSchema } from "@/lib/llm/types";
 import { uuid, shortKey } from "@/lib/id";
 import { checkRateLimit, llmHourLimit } from "@/lib/rate-limit";
 
@@ -18,6 +18,15 @@ export async function POST(req: NextRequest) {
       );
     }
     const input = parsed.data;
+    const runtimeLlm = RuntimeLlmSettingsSchema.safeParse(
+      (body as { llm?: unknown }).llm,
+    );
+    if (!runtimeLlm.success) {
+      return NextResponse.json(
+        { error: "Неверные настройки LLM" },
+        { status: 400 },
+      );
+    }
 
     // owner key
     const cookieStore = await cookies();
@@ -43,7 +52,10 @@ export async function POST(req: NextRequest) {
     }
 
     // generate
-    const { cards: drafts, usedMock } = await generateCards(input);
+    const { cards: drafts, usedMock, provider } = await generateCards(
+      input,
+      runtimeLlm.data,
+    );
 
     // save
     const db = getDb();
@@ -55,7 +67,7 @@ export async function POST(req: NextRequest) {
       subject: input.subject,
       grade: input.grade,
       topic: input.topic,
-      settings: "{}",
+      settings: JSON.stringify({ provider, usedMock }),
     });
 
     const cardRows = drafts.map((d, i) => ({

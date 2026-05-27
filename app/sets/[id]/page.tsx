@@ -103,6 +103,28 @@ export default function SetEditor() {
     });
   }
 
+  async function copyStudentLink() {
+    const url = `${window.location.origin}/play/${id}`;
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = url;
+        textarea.style.position = "fixed";
+        textarea.style.left = "-9999px";
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        document.execCommand("copy");
+        textarea.remove();
+      }
+      alert("Ссылка скопирована: " + url);
+    } catch {
+      window.prompt("Скопируйте ссылку ученикам:", url);
+    }
+  }
+
   if (error) return <div className="p-8 text-red-600">{error}</div>;
   if (!set) return <div className="p-8 text-gray-500">Загрузка…</div>;
 
@@ -210,11 +232,7 @@ export default function SetEditor() {
             ▶ Открыть плеер
           </button>
           <button
-            onClick={() => {
-              const url = `${window.location.origin}/play/${id}`;
-              navigator.clipboard.writeText(url);
-              alert("Ссылка скопирована: " + url);
-            }}
+            onClick={copyStudentLink}
             className="text-sm border border-gray-200 text-gray-600 hover:bg-gray-50 rounded-lg px-4 py-2"
           >
             🔗 Ссылка ученикам

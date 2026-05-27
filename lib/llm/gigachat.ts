@@ -1,5 +1,5 @@
 import "server-only";
-import type { CardDraft, GenerateInput } from "./types";
+import type { CardDraft, GenerateInput, RuntimeLlmSettings } from "./types";
 import { CardDraftArraySchema } from "./types";
 import { mockGenerate } from "./mock";
 
@@ -8,44 +8,112 @@ import { mockGenerate } from "./mock";
  * Если USE_MOCK_LLM=true или ключа нет — возвращаем mock-карточки.
  * Если реальный API падает — тоже fallback на mock. Демо не должно умирать.
  */
-export async function generateCards(input: GenerateInput): Promise<{
+export async function generateCards(
+  input: GenerateInput,
+  runtime?: RuntimeLlmSettings,
+): Promise<{
   cards: CardDraft[];
   usedMock: boolean;
   reason?: string;
+  provider: "mock" | "scarlex" | "gigachat";
 }> {
-  if (process.env.USE_MOCK_LLM === "true") {
-    return { cards: mockGenerate(input), usedMock: true, reason: "USE_MOCK_LLM=true" };
+  const envProvider = process.env.LLM_PROVIDER as
+    | "mock"
+    | "scarlex"
+    | "gigachat"
+    | undefined;
+  const provider = runtime?.provider ?? envProvider ?? "gigachat";
+
+  if (
+    provider === "mock" ||
+    (!runtime?.provider && !envProvider && process.env.USE_MOCK_LLM === "true")
+  ) {
+    return {
+      cards: mockGenerate(input),
+      usedMock: true,
+      reason: provider === "mock" ? "provider=mock" : "USE_MOCK_LLM=true",
+      provider: "mock",
+    };
   }
-  const authKey = process.env.GIGACHAT_AUTH_KEY;
+
+  if (provider === "scarlex") {
+    const apiKey = runtime?.apiKey ?? process.env.SCARLEX_API_KEY ?? process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      return {
+        cards: mockGenerate(input),
+        usedMock: true,
+        reason: "Scarlex API key отсутствует",
+        provider: "scarlex",
+      };
+    }
+
+    try {
+      const cards = await callOpenAiCompatible(input, {
+        apiKey,
+        baseUrl:
+          runtime?.baseUrl ??
+          process.env.SCARLEX_BASE_URL ??
+          process.env.OPENAI_BASE_URL ??
+          "https://api.scarlex.ru/v1",
+        model: runtime?.model ?? process.env.SCARLEX_MODEL ?? "claude-opus-4-7",
+      });
+      return { cards, usedMock: false, provider: "scarlex" };
+    } catch (err) {
+      const reason = err instanceof Error ? err.message : "unknown scarlex error";
+      return { cards: mockGenerate(input), usedMock: true, reason, provider: "scarlex" };
+    }
+  }
+
+  const authKey =
+    runtime?.authKey ??
+    runtime?.apiKey ??
+    process.env.GIGACHAT_AUTH_KEY ??
+    process.env.GIGACHAT_API_KEY;
   if (!authKey) {
     return {
       cards: mockGenerate(input),
       usedMock: true,
-      reason: "GIGACHAT_AUTH_KEY отсутствует",
+      reason: "GigaChat Auth Key отсутствует",
+      provider: "gigachat",
     };
   }
 
   try {
-    const cards = await callGigaChat(input, authKey);
-    return { cards, usedMock: false };
+    const cards = await callGigaChat(input, {
+      authKey,
+      baseUrl: runtime?.baseUrl,
+      oauthUrl: runtime?.oauthUrl,
+      scope: runtime?.scope,
+      model: runtime?.model,
+    });
+    return { cards, usedMock: false, provider: "gigachat" };
   } catch (err) {
     const reason = err instanceof Error ? err.message : "unknown gigachat error";
-    return { cards: mockGenerate(input), usedMock: true, reason };
+    return { cards: mockGenerate(input), usedMock: true, reason, provider: "gigachat" };
   }
 }
 
-// ----------- GigaChat low-level (заготовка под Phase 2) -----------
+// ----------- Low-level LLM clients -----------
 
-let cachedToken: { value: string; expiresAt: number } | null = null;
+let cachedToken: { authKey: string; value: string; expiresAt: number } | null = null;
 
-async function getAccessToken(authKey: string): Promise<string> {
-  if (cachedToken && cachedToken.expiresAt > Date.now() + 60_000) {
+async function getAccessToken(
+  authKey: string,
+  oauthUrl?: string,
+  scopeOverride?: string,
+): Promise<string> {
+  if (
+    cachedToken &&
+    cachedToken.authKey === authKey &&
+    cachedToken.expiresAt > Date.now() + 60_000
+  ) {
     return cachedToken.value;
   }
   const url =
+    oauthUrl ??
     process.env.GIGACHAT_OAUTH_URL ??
     "https://ngw.devices.sberbank.ru:9443/api/v2/oauth";
-  const scope = process.env.GIGACHAT_SCOPE ?? "GIGACHAT_API_PERS";
+  const scope = scopeOverride ?? process.env.GIGACHAT_SCOPE ?? "GIGACHAT_API_PERS";
   const rqUid = crypto.randomUUID();
 
   const res = await fetch(url, {
@@ -63,6 +131,7 @@ async function getAccessToken(authKey: string): Promise<string> {
   }
   const json = (await res.json()) as { access_token: string; expires_at: number };
   cachedToken = {
+    authKey,
     value: json.access_token,
     expiresAt: json.expires_at * 1000,
   };
@@ -71,10 +140,17 @@ async function getAccessToken(authKey: string): Promise<string> {
 
 async function callGigaChat(
   input: GenerateInput,
-  authKey: string,
+  config: {
+    authKey: string;
+    baseUrl?: string;
+    oauthUrl?: string;
+    scope?: string;
+    model?: string;
+  },
 ): Promise<CardDraft[]> {
-  const token = await getAccessToken(authKey);
+  const token = await getAccessToken(config.authKey, config.oauthUrl, config.scope);
   const base =
+    config.baseUrl ??
     process.env.GIGACHAT_BASE_URL ??
     "https://gigachat.devices.sberbank.ru/api/v1";
 
@@ -87,7 +163,7 @@ async function callGigaChat(
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
-      model: "GigaChat",
+      model: config.model ?? "GigaChat",
       temperature: 0.4,
       messages: [
         {
@@ -100,6 +176,52 @@ async function callGigaChat(
     }),
   });
   if (!res.ok) throw new Error(`GigaChat chat failed: ${res.status}`);
+  const json = (await res.json()) as {
+    choices: { message: { content: string } }[];
+  };
+  const raw = json.choices?.[0]?.message?.content?.trim();
+  if (!raw) throw new Error("Empty completion");
+
+  const jsonText = extractJson(raw);
+  const parsed = CardDraftArraySchema.safeParse(JSON.parse(jsonText));
+  if (!parsed.success) {
+    throw new Error("LLM response failed schema validation");
+  }
+  return parsed.data;
+}
+
+async function callOpenAiCompatible(
+  input: GenerateInput,
+  config: {
+    apiKey: string;
+    baseUrl: string;
+    model: string;
+  },
+): Promise<CardDraft[]> {
+  const base = config.baseUrl.replace(/\/$/, "");
+  const prompt = buildPrompt(input);
+  const res = await fetch(`${base}/chat/completions`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      Authorization: `Bearer ${config.apiKey}`,
+    },
+    body: JSON.stringify({
+      model: config.model,
+      temperature: 0.4,
+      messages: [
+        {
+          role: "system",
+          content:
+            "Ты — методист российской школы. Возвращай только валидный JSON-массив.",
+        },
+        { role: "user", content: prompt },
+      ],
+    }),
+  });
+
+  if (!res.ok) throw new Error(`OpenAI-compatible chat failed: ${res.status}`);
   const json = (await res.json()) as {
     choices: { message: { content: string } }[];
   };

@@ -1,36 +1,54 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ГигаСамобранка — генератор учебных карточек
 
-## Getting Started
+> Открыл учебник — карточки накрыли стол сами.
 
-First, run the development server:
+Хакатон СберОбразование, Кейс 2. MVP для учителя: загружает материалы → получает карточки → редактирует → даёт ссылку ученикам → видит результаты → печатает.
+
+## Стек
+
+- Next.js 16.2.6, React 19, Tailwind v4, TypeScript
+- Drizzle ORM + `@libsql/client` (SQLite)
+- KaTeX для формул
+- LLM: mock-first; реальный через `/settings` (Scarlex V2 / GigaChat)
+
+## Запуск
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run db:migrate    # создать local.db
+npm run dev           # localhost:3000
+# или
+npm run dev:lan       # 0.0.0.0:3000 для локалки
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Smoke test
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run smoke
+# или
+SMOKE_BASE=http://localhost:3000 npm run smoke
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Демо-сценарий
 
-## Learn More
+1. Открыть `/`.
+2. Кликнуть демо «Словарные слова: Зима».
+3. Редактор → плеер → ссылка ученикам.
+4. Ученик проходит → результаты → печать.
 
-To learn more about Next.js, take a look at the following resources:
+Подробнее: `docs/DEMO_SCRIPT.md`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Документация
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `docs/CLOUD_HANDOFF.md` — инструкция для Devin Cloud
+- `docs/CURRENT_STATE.md` — что работает, что нет
+- `docs/DEMO_SCRIPT.md` — сценарий проверки
+- `docs/KNOWN_ISSUES.md` — известные проблемы
+- `docs/ORG_REQUIREMENTS.md` — требования организаторов
+- `AGENTS.md` — правила проекта
 
-## Deploy on Vercel
+## Важно
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **NO real names** в коммитах, README, коде. Используй `UVEDOMLENIE`.
+- API-ключи не хранить в коде. Вводить через `/settings` или `.env.local`.
+- `.env.local` и `local.db` в `.gitignore`.
