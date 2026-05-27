@@ -71,17 +71,15 @@ export default function Home() {
     return () => clearInterval(t);
   }, [loading]);
 
+  // синхронная загрузка LLM-настроек (localStorage — sync API)
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      const raw = localStorage.getItem(LLM_SETTINGS_STORAGE_KEY);
-      if (!raw) return;
-      try {
-        setLlmSettings(JSON.parse(raw) as ClientLlmSettings);
-      } catch {
-        localStorage.removeItem(LLM_SETTINGS_STORAGE_KEY);
-      }
-    }, 0);
-    return () => window.clearTimeout(timer);
+    const raw = localStorage.getItem(LLM_SETTINGS_STORAGE_KEY);
+    if (!raw) return;
+    try {
+      setLlmSettings(JSON.parse(raw) as ClientLlmSettings);
+    } catch {
+      localStorage.removeItem(LLM_SETTINGS_STORAGE_KEY);
+    }
   }, []);
 
   function onFilesChange() {
@@ -101,6 +99,15 @@ export default function Home() {
 
     if (!subject.trim() || !grade.trim() || !topic.trim()) {
       setError("Заполните предмет, класс и тему");
+      return;
+    }
+
+    if (llmSettings?.provider === "scarlex" && !llmSettings.apiKey?.trim()) {
+      setError("Введите Scarlex API key в /settings");
+      return;
+    }
+    if (llmSettings?.provider === "gigachat" && !llmSettings.authKey?.trim()) {
+      setError("Введите GigaChat Auth Key в /settings");
       return;
     }
 
