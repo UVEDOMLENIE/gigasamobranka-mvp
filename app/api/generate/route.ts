@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
     }
 
     // generate
-    const { cards: drafts, usedMock, provider, reason } = await generateCards(
+    const { cards: drafts, usedMock, provider, reason, debug } = await generateCards(
       input,
       runtimeLlm.data,
     );
@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
 
     await db.insert(cards).values(cardRows);
 
-    return NextResponse.json({ setId, usedMock, count: cardRows.length, reason });
+    return NextResponse.json({ setId, usedMock, count: cardRows.length, reason, debug });
   } catch (err) {
     console.error("[/api/generate]", err);
     return NextResponse.json({ error: "Внутренняя ошибка сервера" }, { status: 500 });

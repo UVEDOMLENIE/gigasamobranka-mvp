@@ -9,6 +9,14 @@ import { mockGenerate } from "./mock";
  * Если выбран scarlex/gigachat, но ключ пустой — fallback на mock.
  * Если реальный API падает — тоже fallback на mock.
  */
+export type LlmDebug = {
+  prompt?: string;
+  url?: string;
+  status?: number;
+  rawResponse?: string;
+  error?: string;
+};
+
 export async function generateCards(
   input: GenerateInput,
   runtime?: RuntimeLlmSettings,
@@ -17,6 +25,7 @@ export async function generateCards(
   usedMock: boolean;
   reason?: string;
   provider: "mock" | "scarlex" | "gigachat";
+  debug?: LlmDebug;
 }> {
   const envProvider = process.env.LLM_PROVIDER as
     | "mock"
@@ -42,11 +51,12 @@ export async function generateCards(
         usedMock: true,
         reason: "Scarlex API key отсутствует",
         provider: "scarlex",
+        debug: { error: "Scarlex API key отсутствует" },
       };
     }
 
     try {
-      const cards = await callOpenAiCompatible(input, {
+      const { cards, debug } = await callOpenAiCompatible(input, {
         apiKey,
         baseUrl:
           runtime?.baseUrl ??
@@ -55,9 +65,10 @@ export async function generateCards(
           "https://api.scarlex.ru/v1",
         model: runtime?.model ?? process.env.SCARLEX_MODEL ?? "claude-opus-4-7",
       });
-      return { cards, usedMock: false, provider: "scarlex" };
+      return { cards, usedMock: false, provider: "scarlex", debug };
     } catch (err) {
       const reason = err instanceof Error ? err.message : "unknown scarlex error";
+      console.error(`[generateCards/scarlex] fallback to mock: ${reason}`);
       return { cards: mockGenerate(input), usedMock: true, reason, provider: "scarlex" };
     }
   }
@@ -195,10 +206,15 @@ async function callOpenAiCompatible(
     baseUrl: string;
     model: string;
   },
-): Promise<CardDraft[]> {
+): Promise<{ cards: CardDraft[]; debug: LlmDebug }> {
   const base = config.baseUrl.replace(/\/$/, "");
   const prompt = buildPrompt(input);
-  const res = await fetch(`${base}/chat/completions`, {
+  const url = `${base}/chat/completions`;
+
+  console.error(`[Scarlex] POST ${url} model=${config.model}`);
+  console.error(`[Scarlex] Prompt (first 800 chars):\n${prompt.slice(0, 800)}...`);
+
+  const res = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -219,19 +235,31 @@ async function callOpenAiCompatible(
     }),
   });
 
-  if (!res.ok) throw new Error(`OpenAI-compatible chat failed: ${res.status}`);
+  console.error(`[Scarlex] Response status: ${res.status}`);
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    console.error(`[Scarlex] Error body (first 500):\n${body.slice(0, 500)}`);
+    throw new Error(`OpenAI-compatible chat failed: ${res.status}`);
+  }
+
   const json = (await res.json()) as {
     choices: { message: { content: string } }[];
   };
-  const raw = json.choices?.[0]?.message?.content?.trim();
+  const raw = json.choices?.[0]?.message?.content?.trim() ?? "";
+  console.error(`[Scarlex] Raw response (first 800 chars):\n${raw.slice(0, 800)}...`);
+
   if (!raw) throw new Error("Empty completion");
 
   const jsonText = extractJson(raw);
   const parsed = CardDraftArraySchema.safeParse(JSON.parse(jsonText));
   if (!parsed.success) {
+    console.error(`[Scarlex] Schema validation failed. Extracted JSON:\n${jsonText.slice(0, 500)}`);
     throw new Error("LLM response failed schema validation");
   }
-  return parsed.data;
+
+  const debug: LlmDebug = { prompt: prompt.slice(0, 2000), url, status: res.status, rawResponse: raw.slice(0, 2000) };
+  return { cards: parsed.data, debug };
 }
 
 function buildPrompt(input: GenerateInput): string {

@@ -33,6 +33,8 @@ export default function SetEditor() {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [genInfo, setGenInfo] = useState<{ provider?: string; usedMock?: boolean }>({});
+  const [debugLog, setDebugLog] = useState<unknown>(null);
+  const [showDebug, setShowDebug] = useState(false);
 
   useEffect(() => {
     fetch(`/api/sets/${id}`)
@@ -45,6 +47,12 @@ export default function SetEditor() {
           setGenInfo({ provider: s.provider, usedMock: s.usedMock });
         } catch {
           setGenInfo({});
+        }
+        try {
+          const raw = localStorage.getItem(`gs_debug_${id}`);
+          if (raw) setDebugLog(JSON.parse(raw));
+        } catch {
+          setDebugLog(null);
         }
       })
       .catch(() => setError("Не удалось загрузить набор"));
@@ -270,7 +278,24 @@ export default function SetEditor() {
           >
             📊 Результаты
           </button>
+          {debugLog && (
+            <button
+              onClick={() => setShowDebug((s) => !s)}
+              className="text-sm border border-blue-200 text-blue-600 hover:bg-blue-50 rounded-lg px-4 py-2"
+            >
+              🐛 Отладочный лог
+            </button>
+          )}
         </div>
+
+        {showDebug && debugLog && (
+          <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50/40 p-4 text-xs font-mono text-gray-700 space-y-2 overflow-auto max-h-96">
+            <p className="font-bold text-blue-800">Отладочный лог генерации</p>
+            <pre className="whitespace-pre-wrap break-all">
+              {JSON.stringify(debugLog, null, 2)}
+            </pre>
+          </div>
+        )}
       </div>
     </main>
   );

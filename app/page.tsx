@@ -171,10 +171,13 @@ export default function Home() {
         throw new Error((err as { error?: string }).error ?? `Ошибка сервера (${res.status})`);
       }
 
-      const { setId, usedMock, reason } = (await res.json()) as { setId: string; usedMock?: boolean; reason?: string };
+      const { setId, usedMock, reason, debug } = (await res.json()) as { setId: string; usedMock?: boolean; reason?: string; debug?: unknown };
       if (usedMock) {
         setWarning(`⚠️ Генерация в демо-режиме (без нейросети). ${reason || "Проверьте ключ в /settings"}`);
       }
+      try {
+        localStorage.setItem(`gs_debug_${setId}`, JSON.stringify(debug ?? {}));
+      } catch { /* ignore */ }
       router.push(`/sets/${setId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Неизвестная ошибка");
