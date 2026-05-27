@@ -33,6 +33,16 @@ export default function LibraryPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  async function handleDelete(id: string) {
+    if (!confirm("Удалить набор? Это действие нельзя отменить.")) return;
+    const res = await fetch(`/api/sets/${id}`, { method: "DELETE" });
+    if (res.ok) {
+      setItems((prev) => prev.filter((it) => it.id !== id));
+    } else {
+      alert("Не удалось удалить набор");
+    }
+  }
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-amber-50 to-orange-50 py-10 px-4">
       <div className="max-w-3xl mx-auto">
@@ -80,6 +90,13 @@ export default function LibraryPage() {
                   >
                     Плеер
                   </Link>
+                  <button
+                    onClick={() => handleDelete(it.id)}
+                    className="text-xs bg-red-50 border border-red-200 hover:bg-red-100 text-red-700 rounded-lg px-3 py-1.5"
+                    title="Удалить"
+                  >
+                    🗑
+                  </button>
                 </div>
               </li>
             ))}

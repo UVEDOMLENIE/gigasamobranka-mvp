@@ -73,3 +73,27 @@ export async function PUT(req: NextRequest, ctx: RouteCtx) {
     return NextResponse.json({ error: "Ошибка обновления" }, { status: 500 });
   }
 }
+
+// DELETE /api/sets/[id] — удалить набор учителя
+export async function DELETE(_req: NextRequest, ctx: RouteCtx) {
+  try {
+    const { id } = await ctx.params;
+    const cookieStore = await cookies();
+    const ownerKey = cookieStore.get(process.env.OWNER_KEY_COOKIE_NAME ?? "gs_owner")?.value;
+    if (!ownerKey)
+      return NextResponse.json({ error: "Нет доступа" }, { status: 403 });
+
+    const db = getDb();
+    const set = await db.query.sets.findFirst({ where: eq(sets.id, id) });
+    if (!set) return NextResponse.json({ error: "Не найдено" }, { status: 404 });
+    if (set.ownerKey !== ownerKey)
+      return NextResponse.json({ error: "Нет доступа" }, { status: 403 });
+
+    await db.delete(sets).where(eq(sets.id, id));
+    // cards удалятся автоматически по cascade
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error("[DELETE /api/sets/[id]]", err);
+    return NextResponse.json({ error: "Ошибка удаления" }, { status: 500 });
+  }
+}
