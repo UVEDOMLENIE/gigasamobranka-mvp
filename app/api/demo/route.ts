@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
     };
 
     const { cards: drafts } = await generateCards(input, { provider: "mock" });
-    const db = getDb();
+    const db = await getDb();
     const setId = uuid();
 
     await db.insert(sets).values({

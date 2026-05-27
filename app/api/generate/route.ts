@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
     console.error(`[/api/generate] provider=${provider} usedMock=${usedMock} reason=${reason}`);
 
     // save
-    const db = getDb();
+    const db = await getDb();
     const setId = uuid();
 
     await db.insert(sets).values({

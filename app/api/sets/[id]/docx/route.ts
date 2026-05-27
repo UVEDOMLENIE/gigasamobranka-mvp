@@ -16,7 +16,7 @@ export async function GET(_req: NextRequest, ctx: RouteCtx) {
       return NextResponse.json({ error: "Нет доступа" }, { status: 403 });
     }
 
-    const db = getDb();
+    const db = await getDb();
     const set = await db.query.sets.findFirst({ where: eq(sets.id, id) });
     if (!set) {
       return NextResponse.json({ error: "Не найдено" }, { status: 404 });

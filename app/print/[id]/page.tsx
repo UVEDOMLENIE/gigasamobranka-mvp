@@ -9,7 +9,7 @@ type Props = { params: Promise<{ id: string }> };
 
 export default async function PrintPage({ params }: Props) {
   const { id } = await params;
-  const db = getDb();
+  const db = await getDb();
   const set = await db.query.sets.findFirst({ where: eq(sets.id, id) });
   if (!set) notFound();
 

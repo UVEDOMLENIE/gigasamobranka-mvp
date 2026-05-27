@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm";
 export async function GET(_req: NextRequest, ctx: RouteContext<"/api/sets/[id]/results">) {
   try {
     const { id } = await ctx.params;
-    const db = getDb();
+    const db = await getDb();
 
     const allSessions = await db
       .select()

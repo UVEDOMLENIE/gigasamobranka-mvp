@@ -12,7 +12,7 @@ export async function GET() {
       return NextResponse.json({ items: [] });
     }
 
-    const db = getDb();
+    const db = await getDb();
     const rows = await db
       .select()
       .from(sets)

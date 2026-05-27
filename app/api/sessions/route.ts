@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     if (!setId || !studentName?.trim())
       return NextResponse.json({ error: "setId и studentName обязательны" }, { status: 400 });
 
-    const db = getDb();
+    const db = await getDb();
     const sessionId = uuid();
     await db.insert(sessions).values({
       id: sessionId,
@@ -43,7 +43,7 @@ export async function PATCH(req: NextRequest) {
     if (!sessionId || !cardId || known === undefined || !timeMs)
       return NextResponse.json({ error: "Неверные параметры" }, { status: 400 });
 
-    const db = getDb();
+    const db = await getDb();
     await db.insert(answers).values({
       id: uuid(),
       sessionId,
@@ -66,7 +66,7 @@ export async function PUT(req: NextRequest) {
     if (!sessionId)
       return NextResponse.json({ error: "sessionId обязателен" }, { status: 400 });
 
-    const db = getDb();
+    const db = await getDb();
     await db
       .update(sessions)
       .set({ finishedAt: Math.floor(Date.now() / 1000) })
