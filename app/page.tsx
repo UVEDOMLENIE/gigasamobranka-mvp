@@ -26,10 +26,28 @@ const LOADING_PHRASES = [
   "🎒 Готовлю набор для урока…",
 ];
 
+const SUBJECTS = [
+  "Русский язык",
+  "Математика",
+  "Окружающий мир",
+  "Литература",
+  "Английский язык",
+  "История",
+  "Биология",
+  "География",
+  "Физика",
+  "Химия",
+  "Информатика",
+];
+
+const GRADES = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"];
+
 export default function Home() {
   const router = useRouter();
   const [subject, setSubject] = useState("");
+  const [subjectSelect, setSubjectSelect] = useState("");
   const [grade, setGrade] = useState("");
+  const [gradeSelect, setGradeSelect] = useState("");
   const [topic, setTopic] = useState("");
   const [count, setCount] = useState(8);
   const [difficulty, setDifficulty] = useState<Difficulty>("medium");
@@ -217,23 +235,61 @@ export default function Home() {
           <div className="grid grid-cols-3 gap-3">
             <div className="col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">Предмет</label>
-              <input
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
+              <select
+                value={subjectSelect}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setSubjectSelect(val);
+                  if (val !== "__other__") setSubject(val);
+                  else setSubject("");
+                }}
                 required
-                placeholder="Русский язык"
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
-              />
+              >
+                <option value="">— выберите —</option>
+                {SUBJECTS.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+                <option value="__other__">Другое…</option>
+              </select>
+              {subjectSelect === "__other__" && (
+                <input
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                  required
+                  placeholder="Свой предмет"
+                  className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                />
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Класс</label>
-              <input
-                value={grade}
-                onChange={(e) => setGrade(e.target.value)}
+              <select
+                value={gradeSelect}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setGradeSelect(val);
+                  if (val !== "__other__") setGrade(val);
+                  else setGrade("");
+                }}
                 required
-                placeholder="3"
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
-              />
+              >
+                <option value="">— выберите —</option>
+                {GRADES.map((g) => (
+                  <option key={g} value={g}>{g} класс</option>
+                ))}
+                <option value="__other__">Другое…</option>
+              </select>
+              {gradeSelect === "__other__" && (
+                <input
+                  value={grade}
+                  onChange={(e) => setGrade(e.target.value)}
+                  required
+                  placeholder="Свой класс"
+                  className="mt-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                />
+              )}
             </div>
           </div>
 
