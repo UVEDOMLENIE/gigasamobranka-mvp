@@ -27,6 +27,7 @@ const DEFAULT_SETTINGS: LlmSettings = {
   model: "claude-haiku-4-7",
 };
 
+
 const PROVIDER_DEFAULTS: Record<Provider, Partial<LlmSettings>> = {
   mock: {},
   scarlex: {
@@ -42,11 +43,9 @@ const PROVIDER_DEFAULTS: Record<Provider, Partial<LlmSettings>> = {
 };
 
 const SCARLEX_MODELS = [
-  { value: "claude-haiku-4-7", label: "claude-haiku-4-7 (рекомендуется)" },
-  { value: "claude-sonnet-4-7", label: "claude-sonnet-4-7" },
-  { value: "claude-opus-4-7", label: "claude-opus-4-7" },
-  { value: "gpt-4o", label: "gpt-4o" },
-  { value: "gpt-4o-mini", label: "gpt-4o-mini" },
+  { value: "claude-haiku-4-7", label: "claude-haiku-4-7 (рекомендуется — быстрая)" },
+  { value: "claude-sonnet-4", label: "claude-sonnet-4 (умная)" },
+  { value: "claude-opus-4.7", label: "claude-opus-4.7 (самая умная)" },
 ];
 
 export default function SettingsPage() {
@@ -160,7 +159,7 @@ export default function SettingsPage() {
                     <option value="custom">Своя модель</option>
                   </select>
                   <p className="mt-1 text-xs text-gray-500">
-                    Для Scarlex рекомендуется haiku — остальные часто лежат или 429.
+                    haiku-4-7 — быстрая и стабильная. sonnet-4 и opus-4.7 — умнее, но дороже. GPT-модели недоступны (квота).
                   </p>
                 </label>
 
