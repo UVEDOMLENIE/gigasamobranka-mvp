@@ -1,0 +1,43 @@
+erDiagram
+    SETS ||--o{ CARDS : contains
+    SETS ||--o{ SESSIONS : has
+    SESSIONS ||--o{ ANSWERS : includes
+    CARDS ||--o{ ANSWERS : answered_in
+
+    SETS {
+        text id PK
+        text owner_key
+        text subject
+        text grade
+        text topic
+        text settings
+        int created_at
+        int updated_at
+    }
+
+    CARDS {
+        text id PK
+        text set_id FK
+        int position
+        text question
+        text answer
+        text source
+        text difficulty
+    }
+
+    SESSIONS {
+        text id PK
+        text set_id FK
+        text student_name
+        int started_at
+        int finished_at
+    }
+
+    ANSWERS {
+        text id PK
+        text session_id FK
+        text card_id FK
+        boolean known
+        int time_ms
+        int answered_at
+    }

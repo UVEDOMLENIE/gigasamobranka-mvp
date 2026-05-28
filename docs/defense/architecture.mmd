@@ -1,0 +1,30 @@
+flowchart TD
+    Browser["🌐 Браузер<br/>React 19 + Tailwind"] -->|HTTP| NextJS["▲ Next.js 16<br/>App Router"]
+    NextJS -->|API Routes| API["API Layer"]
+
+    subgraph API_Layer ["API Routes"]
+        API -->|/api/generate| Gen["generateCards()"]
+        API -->|/api/upload| Upload["parseUpload()"]
+        API -->|/api/sets/*| CRUD["CRUD sets/cards"]
+        API -->|/api/sets/*/docx| Docx["DOCX export"]
+        API -->|/api/sessions| Stats["Session stats"]
+    end
+
+    Gen -->|OpenAI API| Scarlex["Scarlex<br/>Claude Sonnet 4.6"]
+    Gen -->|OAuth 2.0| GigaChat["GigaChat API"]
+    Gen -.->|fallback| Mock["Mock<br/>(regex)"]
+
+    Upload -->|mammoth| DOCX_P["DOCX"]
+    Upload -->|pdf-parse| PDF_P["PDF"]
+    Upload -->|native| TXT_P["TXT"]
+
+    CRUD -->|Drizzle ORM| DB[("SQLite<br/>libsql")]
+    Stats --> DB
+
+    DB -.->|backup/restore| Blob["☁️ Vercel Blob<br/>db.sqlite"]
+
+    style Scarlex fill:#e1f5fe
+    style GigaChat fill:#fff3e0
+    style DB fill:#e8f5e9
+    style Blob fill:#fce4ec
+    style Mock fill:#f3e5f5

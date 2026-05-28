@@ -1,0 +1,44 @@
+sequenceDiagram
+    actor Teacher as Учитель
+    participant Browser as Браузер
+    participant NextJS as Next.js API
+    participant LLM as Scarlex / GigaChat
+    participant DB as SQLite + Blob
+
+    Teacher->>Browser: Загружает PDF/DOCX
+    Browser->>NextJS: POST /api/upload
+    NextJS->>NextJS: Парсинг текста
+
+    Teacher->>Browser: Жмёт "Составить набор"
+    Browser->>NextJS: POST /api/generate
+    NextJS->>LLM: Промпт + текст (4000 символов)
+    LLM-->>NextJS: JSON-массив карточек
+    NextJS->>DB: INSERT sets, cards
+    NextJS->>DB: backupDb() → Vercel Blob
+    NextJS-->>Browser: setId
+
+    Teacher->>Browser: Редактирует карточки
+    Browser->>NextJS: PUT /api/sets/[id]
+    NextJS->>DB: UPDATE cards
+    NextJS->>DB: backupDb()
+
+    Teacher->>Browser: "Ссылка ученикам"
+    Browser-->>Teacher: /play/[id]
+
+    actor Student as Ученик
+    Student->>Browser: Открывает ссылку
+    Browser->>NextJS: GET /play/[id]
+    NextJS->>DB: SELECT cards
+    DB-->>NextJS: Карточки
+    NextJS-->>Browser: Плеер
+
+    Student->>Browser: Отвечает (Знал/Не знал)
+    Browser->>NextJS: PATCH /api/sessions
+    NextJS->>DB: INSERT answers
+    NextJS->>DB: backupDb()
+
+    Teacher->>Browser: "Результаты"
+    Browser->>NextJS: GET /api/sets/[id]/results
+    NextJS->>DB: SELECT sessions, answers
+    DB-->>NextJS: Статистика
+    NextJS-->>Browser: Таблица с процентами
