@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>ГигаСамобранка — презентация</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.0.2/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.0.2/dist/theme/black.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    :root { --r-background-color: #0f172a; --r-main-font: 'Inter', sans-serif; --r-heading-font: 'Inter', sans-serif; --r-heading-color: #e2e8f0; --r-main-color: #cbd5e1; --r-link-color: #38bdf8; --r-selection-background: #38bdf8; }
+    .reveal h1, .reveal h2, .reveal h3 { font-weight: 700; letter-spacing: -0.02em; }
+    .reveal h1 { font-size: 2.4em; color: #f8fafc; }
+    .reveal h2 { font-size: 1.6em; color: #e2e8f0; margin-bottom: 0.6em; }
+    .reveal h3 { font-size: 1.2em; color: #94a3b8; }
+    .reveal p, .reveal li { font-size: 0.75em; line-height: 1.5; }
+    .reveal ul { list-style: none; padding-left: 0; }
+    .reveal ul li { position: relative; padding-left: 1.2em; margin-bottom: 0.5em; }
+    .reveal ul li::before { content: "▸"; position: absolute; left: 0; color: #38bdf8; }
+    .reveal .accent { color: #38bdf8; }
+    .reveal .muted { color: #64748b; font-size: 0.65em; }
+    .reveal .tag { display: inline-block; background: #1e293b; color: #38bdf8; padding: 0.15em 0.6em; border-radius: 999px; font-size: 0.55em; margin-right: 0.4em; margin-bottom: 0.4em; border: 1px solid #334155; }
+    .reveal .screenshot { max-height: 380px; border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); margin: 0.5em auto; display: block; }
+    .reveal .two-col { display: flex; gap: 1.5em; align-items: flex-start; }
+    .reveal .two-col > * { flex: 1; }
+    .reveal .center-box { text-align: center; }
+    .reveal table { font-size: 0.55em; width: 100%; border-collapse: collapse; margin-top: 0.8em; }
+    .reveal th, .reveal td { padding: 0.5em 0.8em; text-align: left; border-bottom: 1px solid #1e293b; }
+    .reveal th { color: #94a3b8; font-weight: 600; }
+    .reveal tr:last-child td { border-bottom: none; }
+    .reveal .mermaid { background: transparent !important; }
+    .reveal .mermaid svg { max-width: 90%; max-height: 300px; }
+    .reveal .slide-number { background: #1e293b; color: #94a3b8; font-size: 0.5em; padding: 0.2em 0.5em; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- Slide 1 -->
+      <section>
+        <div class="center-box">
+          <h1>ГигаСамобранка</h1>
+          <p style="font-size:0.85em; color:#94a3b8; margin-top:0.3em;">Генератор учебных карточек на базе LLM</p>
+          <p class="muted" style="margin-top:0.8em; font-style:italic;">«Открыл учебник — карточки накрыли стол сами»</p>
+          <div style="margin-top:1.2em;">
+            <span class="tag">Next.js 16</span>
+            <span class="tag">React 19</span>
+            <span class="tag">Tailwind v4</span>
+            <span class="tag">Scarlex Claude</span>
+          </div>
+          <p class="muted" style="margin-top:1.5em;">Кейс 2 · Хакатон СберОбразование · 2026</p>
+        </div>
+      </section>
+
+      <!-- Slide 2 -->
+      <section>
+        <h2>Команда</h2>
+        <p class="muted">GigaSamobranka Team</p>
+        <div class="two-col" style="margin-top:1em;">
+          <div>
+            <h3 class="accent">Product / DevOps / QA</h3>
+            <ul>
+              <li>Идея, приоритеты, тестирование</li>
+              <li>Деплой, env vars, smoke tests</li>
+              <li>Скриншоты, скринкаст</li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="accent">AI-разработчики</h3>
+            <ul>
+              <li>Архитектура Next.js + SQLite</li>
+              <li>Интеграция LLM (Scarlex / GigaChat)</li>
+              <li>UI, редактор, плеер, экспорт</li>
+              <li>Документация, презентация</li>
+            </ul>
+          </div>
+        </div>
+        <p class="muted" style="margin-top:1em;">Контакт: <a href="https://github.com/UVEDOMLENIE/gigasamobranka-mvp">github.com/UVEDOMLENIE/gigasamobranka-mvp</a></p>
+      </section>
+
+      <!-- Slide 3 -->
+      <section>
+        <h2>Проблема и пользователи</h2>
+        <div class="two-col">
+          <div>
+            <h3 class="accent">Проблема</h3>
+            <ul>
+              <li><strong>2–3 часа</strong> на ручное составление карточек</li>
+              <li><strong>30+ файлов</strong> в «папке учителя» — хаос</li>
+              <li>Учитель тратит время на рутину вместо детей</li>
+            </ul>
+            <h3 class="accent" style="margin-top:0.8em;">Целевая аудитория</h3>
+            <ul>
+              <li>Учителя 1–11 класса</li>
+              <li>Методисты, репетиторы</li>
+              <li>Школы РФ, без бюджета на EdTech</li>
+            </ul>
+          </div>
+          <div>
+            <img src="../screenshots/01_home.png" class="screenshot" alt="Главная">
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 4 -->
+      <section>
+        <h2>Решение</h2>
+        <p class="muted">Загрузка материала → LLM → карточки → редактирование → ссылка ученикам → результаты → печать</p>
+        <div class="two-col" style="margin-top:0.6em;">
+          <div>
+            <h3 class="accent">Сценарии</h3>
+            <ul>
+              <li>Загрузить PDF/DOCX/TXT</li>
+              <li>Получить набор за <strong>30 сек</strong></li>
+              <li>Править inline, drag-reorder</li>
+              <li>Дать ссылку ученику (без регистрации)</li>
+              <li>Смотреть результаты сессий</li>
+              <li>Печать A4 или DOCX экспорт</li>
+            </ul>
+          </div>
+          <div>
+            <img src="../screenshots/02_set.png" class="screenshot" alt="Редактор">
+          </div>
+        </div>
+        <table style="margin-top:0.8em;">
+          <tr><th></th><th>Quizlet</th><th>Anki</th><th>ChatGPT</th><th class="accent">Мы</th></tr>
+          <tr><td>Генерация из PDF/DOCX</td><td>❌</td><td>❌</td><td>⚠️</td><td class="accent">✅</td></tr>
+          <tr><td>Редактирование + плеер</td><td>❌</td><td>⚠️</td><td>❌</td><td class="accent">✅</td></tr>
+          <tr><td>Статистика учеников</td><td>❌</td><td>❌</td><td>❌</td><td class="accent">✅</td></tr>
+          <tr><td>Печать A4 / DOCX</td><td>❌</td><td>❌</td><td>❌</td><td class="accent">✅</td></tr>
+        </table>
+      </section>
+
+      <!-- Slide 5 -->
+      <section>
+        <h2>Техническая реализация</h2>
+        <div class="mermaid">
+flowchart TD
+    B["🌐 Browser<br/>React 19 + Tailwind"] --> N["▲ Next.js 16<br/>App Router"]
+    N --> A["API Routes"]
+    A --> G["/api/generate<br/>LLM (Scarlex / GigaChat / Mock)"]
+    A --> U["/api/upload<br/>mammoth / pdf-parse"]
+    A --> C["/api/sets/*<br/>Drizzle ORM"]
+    A --> D["/api/sets/*/docx<br/>docx export"]
+    A --> S["/api/sessions<br/>stats"]
+    C --> DB[("SQLite<br/>libsql")]
+    DB -.->|backup/restore| Blob["☁️ Vercel Blob"]
+    style G fill:#e1f5fe
+    style DB fill:#e8f5e9
+    style Blob fill:#fce4ec
+        </div>
+        <div style="margin-top:0.5em;">
+          <span class="tag">Next.js 16</span>
+          <span class="tag">React 19</span>
+          <span class="tag">Tailwind v4</span>
+          <span class="tag">TypeScript</span>
+          <span class="tag">Drizzle ORM</span>
+          <span class="tag">libsql</span>
+          <span class="tag">KaTeX</span>
+        </div>
+      </section>
+
+      <!-- Slide 6 -->
+      <section>
+        <h2>MVP</h2>
+        <div class="two-col">
+          <div>
+            <h3 class="accent">Что реализовано</h3>
+            <ul>
+              <li>✅ Загрузка PDF/DOCX/TXT + drag-drop</li>
+              <li>✅ LLM-генерация (Scarlex/GigaChat/mock)</li>
+              <li>✅ Редактор карточек (inline, reorder, autosave)</li>
+              <li>✅ Плеер (flip, fullscreen, таймер, попытки)</li>
+              <li>✅ Режим ученика по ссылке</li>
+              <li>✅ Результаты сессий (%)</li>
+              <li>✅ Печать A4 + DOCX экспорт</li>
+              <li>✅ KaTeX формулы</li>
+              <li>✅ 5 демо-наборов</li>
+            </ul>
+          </div>
+          <div>
+            <img src="../screenshots/03_library.png" class="screenshot" alt="Библиотека" style="max-height:160px;">
+            <img src="../screenshots/04_print.png" class="screenshot" alt="Печать" style="max-height:160px;">
+          </div>
+        </div>
+        <p class="muted" style="margin-top:0.6em;">Live: <a href="https://gs-mvp-six.vercel.app">gs-mvp-six.vercel.app</a></p>
+      </section>
+
+      <!-- Slide 7 -->
+      <section>
+        <h2>Дорожная карта и риски</h2>
+        <div class="two-col">
+          <div>
+            <h3 class="accent">Спинты</h3>
+            <ul>
+              <li><strong>S1</strong> (20–23 мая) — Core: генерация, редактор, плеер</li>
+              <li><strong>S2</strong> (24–26 мая) — Стабильность: retry, deploy</li>
+              <li><strong>S3</strong> (27 мая) — Prod: persistence, скриншоты</li>
+              <li><strong>S4</strong> (27–28 мая) — Качество LLM: sonnet-4.6</li>
+              <li><strong>Сдача</strong> (28 мая) — Презентация, скринкаст</li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="accent">Риски → меры</h3>
+            <ul>
+              <li>Scarlex 429 → <span class="accent">retry + mock fallback</span></li>
+              <li>БД эфемерна → <span class="accent">Vercel Blob backup</span></li>
+              <li>PPTX не парсится → <span class="accent">fallback textarea</span></li>
+              <li>Триал закончится → <span class="accent">GigaChat / mock</span></li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 8 -->
+      <section>
+        <div class="center-box">
+          <h2>Ссылки и контакты</h2>
+          <p style="font-size:0.9em; margin-top:0.5em;">
+            <span class="accent">Live demo</span><br>
+            <a href="https://gs-mvp-six.vercel.app">gs-mvp-six.vercel.app</a>
+          </p>
+          <p style="font-size:0.9em; margin-top:0.5em;">
+            <span class="accent">Репозиторий</span><br>
+            <a href="https://github.com/UVEDOMLENIE/gigasamobranka-mvp">github.com/UVEDOMLENIE/gigasamobranka-mvp</a>
+          </p>
+          <p style="font-size:0.9em; margin-top:0.5em;">
+            <span class="accent">Smoke test</span><br>
+            <code style="background:#1e293b; padding:0.2em 0.5em; border-radius:4px;">npm run smoke</code>
+          </p>
+          <div style="margin-top:1em;">
+            <span class="tag">PDF</span>
+            <span class="tag">DOCX</span>
+            <span class="tag">TXT</span>
+            <span class="tag">Scarlex</span>
+            <span class="tag">GigaChat</span>
+          </div>
+          <p class="muted" style="margin-top:1.5em;">GigaSamobranka Team · Хакатон СберОбразование · 2026</p>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.0.2/dist/reveal.js"></script>
+  <script>
+    mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });
+    Reveal.initialize({ hash: true, slideNumber: 'c/t', transition: 'slide', width: 1280, height: 720 });
+  </script>
+</body>
+</html>

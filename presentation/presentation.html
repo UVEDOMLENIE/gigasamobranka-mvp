@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ГигаСамобранка — Презентация</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        .slide { display: none; }
+        .slide.active { display: flex; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .card-gradient { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); }
+        .sber-gradient { background: linear-gradient(135deg, #21a038 0%, #4caf50 100%); }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+    <!-- Progress Bar -->
+    <div class="fixed top-0 left-0 w-full h-1 bg-gray-800 z-50">
+        <div id="progress" class="h-full bg-green-500 transition-all duration-300" style="width: 0%"></div>
+    </div>
+
+    <!-- Slide 1: Title -->
+    <div class="slide active flex-col items-center justify-center min-h-screen p-8 gradient-bg" data-slide="1">
+        <div class="text-center max-w-4xl">
+            <div class="mb-8">
+                <span class="bg-white/20 px-4 py-2 rounded-full text-sm font-medium">Хакатон СберОбразование 2026</span>
+            </div>
+            <h1 class="text-6xl md:text-8xl font-extrabold mb-6 tracking-tight">
+                ГигаСамобранка
+            </h1>
+            <p class="text-2xl md:text-3xl text-white/90 mb-8">
+                Генератор учебных карточек из любых материалов
+            </p>
+            <p class="text-xl text-white/80 mb-12 italic">
+                "Открыл учебник — карточки накрыли стол сами"
+            </p>
+            <div class="flex gap-4 justify-center">
+                <div class="bg-white/10 backdrop-blur px-6 py-3 rounded-lg">
+                    <span class="text-3xl font-bold">5</span>
+                    <span class="text-sm block text-white/70">минут на подготовку</span>
+                </div>
+                <div class="bg-white/10 backdrop-blur px-6 py-3 rounded-lg">
+                    <span class="text-3xl font-bold">0</span>
+                    <span class="text-sm block text-white/70">регистрации</span>
+                </div>
+                <div class="bg-white/10 backdrop-blur px-6 py-3 rounded-lg">
+                    <span class="text-3xl font-bold">∞</span>
+                    <span class="text-sm block text-white/70">предметов</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 2: Problem -->
+    <div class="slide flex-col items-center justify-center min-h-screen p-8 bg-gray-900" data-slide="2">
+        <div class="max-w-5xl w-full">
+            <h2 class="text-4xl md:text-5xl font-bold mb-12 text-center">Проблема</h2>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-red-900/30 border border-red-500/30 rounded-2xl p-8">
+                    <div class="text-5xl mb-4">😫</div>
+                    <h3 class="text-2xl font-bold mb-4 text-red-400">Учитель тратит часы</h3>
+                    <ul class="space-y-3 text-gray-300">
+                        <li>• Переписывание из учебника в карточки</li>
+                        <li>• Поиск готовых материалов — редко совпадает</li>
+                        <li>• Ручное форматирование формул</li>
+                        <li>• Нет времени на индивидуализацию</li>
+                    </ul>
+                </div>
+                <div class="bg-yellow-900/30 border border-yellow-500/30 rounded-2xl p-8">
+                    <div class="text-5xl mb-4">🤔</div>
+                    <h3 class="text-2xl font-bold mb-4 text-yellow-400">Ученик теряет мотивацию</h3>
+                    <ul class="space-y-3 text-gray-300">
+                        <li>• Скучные однообразные задания</li>
+                        <li>• Нет мгновенной обратной связи</li>
+                        <li>• Не видно прогресса</li>
+                        <li>• Сложно повторять пройденное</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-12 text-center">
+                <p class="text-2xl text-gray-400">Среднее время подготовки к уроку: <span class="text-red-400 font-bold">2-3 часа</span></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 3: Solution -->
+    <div class="slide flex-col items-center justify-center min-h-screen p-8 sber-gradient" data-slide="3">
+        <div class="max-w-5xl w-full text-center">
+            <h2 class="text-4xl md:text-5xl font-bold mb-8">Решение</h2>
+            <p class="text-2xl mb-12 text-white/90">Загрузи материалы → получи карточки → раздай ученикам</p>
+            
+            <div class="bg-white/10 backdrop-blur rounded-3xl p-8 mb-8">
+                <div class="grid md:grid-cols-4 gap-6">
+                    <div class="text-center">
+                        <div class="text-4xl mb-3">📄</div>
+                        <h4 class="font-bold mb-2">1. Загрузи</h4>
+                        <p class="text-sm text-white/80">PDF, DOCX, TXT, PPTX</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-4xl mb-3">🤖</div>
+                        <h4 class="font-bold mb-2">2. Сгенерируй</h4>
+                        <p class="text-sm text-white/80">LLLM создаёт карточки</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-4xl mb-3">✏️</div>
+                        <h4 class="font-bold mb-2">3. Отредактируй</h4>
+                        <p class="text-sm text-white/80">Быстрый редактор</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-4xl mb-3">🔗</div>
+                        <h4 class="font-bold mb-2">4. Раздай</h4>
+                        <p class="text-sm text-white/80">Ссылка ученикам</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="bg-white/20 rounded-xl p-6">
+                    <div class="text-3xl mb-2">⚡</div>
+                    <h4 class="font-bold">Мгновенно</h4>
+                    <p class="text-sm text-white/80">5 минут вместо 3 часов</p>
+                </div>
+                <div class="bg-white/20 rounded-xl p-6">
+                    <div class="text-3xl mb-2">🎯</div>
+                    <h4 class="font-bold">Точно по теме</h4>
+                    <p class="text-sm text-white/80">Из твоих материалов</p>
+                </div>
+                <div class="bg-white/20 rounded-xl p-6">
+                    <div class="text-3xl mb-2">📊</div>
+                    <h4 class="font-bold">Результаты</h4>
+                    <p class="text-sm text-white/80">Видишь прогресс каждого</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 4: How it works -->
+    <div class="slide flex-col items-center justify-center min-h-screen p-8 bg-gray-900" data-slide="4">
+        <div class="max-w-6xl w-full">
+            <h2 class="text-4xl md:text-5xl font-bold mb-12 text-center">Как это работает</h2>
+            
+            <div class="relative">
+                <!-- Timeline -->
+                <div class="hidden md:block absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-green-500"></div>
+                
+                <div class="space-y-12">
+                    <!-- Step 1 -->
+                    <div class="flex flex-col md:flex-row items-center gap-8">
+                        <div class="md:w-1/2 md:text-right">
+                            <div class="bg-gray-800 rounded-2xl p-6">
+                                <h3 class="text-xl font-bold text-green-400 mb-2">Учитель загружает материалы</h3>
+                                <p class="text-gray-400">PDF учебника, DOCX конспект, TXT заметки — любой формат</p>
+                            </div>
+                        </div>
+                        <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-xl font-bold z-10">1</div>
+                        <div class="md:w-1/2"></div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="flex flex-col md:flex-row items-center gap-8">
+                        <div class="md:w-1/2"></div>
+                        <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-xl font-bold z-10">2</div>
+                        <div class="md:w-1/2">
+                            <div class="bg-gray-800 rounded-2xl p-6">
+                                <h3 class="text-xl font-bold text-green-400 mb-2">ИИ извлекает и генерирует</h3>
+                                <p class="text-gray-400">GigaChat анализирует текст и создаёт карточки с вопросами и ответами</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="flex flex-col md:flex-row items-center gap-8">
+                        <div class="md:w-1/2 md:text-right">
+                            <div class="bg-gray-800 rounded-2xl p-6">
+                                <h3 class="text-xl font-bold text-green-400 mb-2">Учитель редактирует</h3>
+                                <p class="text-gray-400">Быстрый редактор: добавь, удали, измени — автосохранение</p>
+                            </div>
+                        </div>
+                        <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-xl font-bold z-10">3</div>
+                        <div class="md:w-1/2"></div>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="flex flex-col md:flex-row items-center gap-8">
+                        <div class="md:w-1/2"></div>
+                        <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-xl font-bold z-10">4</div>
+                        <div class="md:w-1/2">
+                            <div class="bg-gray-800 rounded-2xl p-6">
+                                <h3 class="text-xl font-bold text-green-400 mb-2">Ученики проходят по ссылке</h3>
+                                <p class="text-gray-400">Без регистрации, просто введи имя и начни</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 5 -->
+                    <div class="flex flex-col md:flex-row items-center gap-8">
+                        <div class="md:w-1/2 md:text-right">
+                            <div class="bg-gray-800 rounded-2xl p-6">
+                                <h3 class="text-xl font-bold text-green-400 mb-2">Результаты и печать</h3>
+                                <p class="text-gray-400">Учитель видит статистику, может распечатать карточки A4</p>
+                            </div>
+                        </div>
+                        <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-xl font-bold z-10">5</div>
+                        <div class="md:w-1/2"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 5: Features -->
+    <div class="slide flex-col items-center justify-center min-h-screen p-8 bg-gray-900" data-slide="5">
+        <div class="max-w-6xl w-full">
+            <h2 class="text-4xl md:text-5xl font-bold mb-12 text-center">Ключевые возможности</h2>
+            
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="bg-gradient-to-br from-purple-900/50 to-purple-800/30 border border-purple-500/30 rounded-2xl p-6">
+                    <div class="text-4xl mb-4">🧮</div>
+                    <h3 class="text-xl font-bold mb-3 text-purple-400">Формулы KaTeX</h3>
+                    <p class="text-gray-400">Математические выражения рендерятся корректно: x² + y² = r²</p>
+                </div>
+
+                <div class="bg-gradient-to-br from-blue-900/50 to-blue-800/30 border border-blue-500/30 rounded-2xl p-6">
+                    <div class="text-4xl mb-4">🖨️</div>
+                    <h3 class="text-xl font-bold mb-3 text-blue-400">Печать A4</h3>
+                    <p class="text-gray-400">Готовые карточки для офлайн работы, шрифт ≥14pt</p>
+                </div>
+
+                <div class="bg-gradient-to-br from-green-900/50 to-green-800/30 border border-green-500/30 rounded-2xl p-6">
+                    <div class="text-4xl mb-4">📱</div>
+                    <h3 class="text-xl font-bold mb-3 text-green-400">Мобильная версия</h3>
+                    <p class="text-gray-400">Удобно с телефона и планшета</p>
+                </div>
+
+                <div class="bg-gradient-to-br from-yellow-900/50 to-yellow-800/30 border border-yellow-500/30 rounded-2xl p-6">
+                    <div class="text-4xl mb-4">🎮</div>
+                    <h3 class="text-xl font-bold mb-3 text-yellow-400">Игровой плеер</h3>
+                    <p class="text-gray-400">Переворачивай карточки, отмечай знание, клавиатурные сокращения</p>
+                </div>
+
+                <div class="bg-gradient-to-br from-red-900/50 to-red-800/30 border border-red-500/30 rounded-2xl p-6">
+                    <div class="text-4xl mb-4">📊</div>
+                    <h3 class="text-xl font-bold mb-3 text-red-400">Статистика</h3>
+                    <p class="text-gray-400">Таблица результатов по каждому ученику</p>
+                </div>
+
+                <div class="bg-gradient-to-br from-pink-900/50 to-pink-800/30 border border-pink-500/30 rounded-2xl p-6">
+                    <div class="text-4xl mb-4">🎨</div>
+                    <h3 class="text-xl font-bold mb-3 text-pink-400">Детский UX</h3>
+                    <p class="text-gray-400">Крупный шрифт, прогресс-бар, похвала за успехи</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 6: Tech Stack -->
+    <div class="slide flex-col items-center justify-center min-h-screen p-8 bg-gray-900" data-slide="6">
+        <div class="max-w-5xl w-full">
+            <h2 class="text-4xl md:text-5xl font-bold mb-12 text-center">Технологии</h2>
+            
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-gray-800 rounded-2xl p-8">
+                    <h3 class="text-2xl font-bold mb-6 text-blue-400">Frontend</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center text-2xl">⚛️</div>
+                            <div>
+                                <div class="font-bold">Next.js 16</div>
+                                <div class="text-sm text-gray-400">React 19, App Router</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-cyan-500/20 rounded-lg flex items-center justify-center text-2xl">🎨</div>
+                            <div>
+                                <div class="font-bold">Tailwind CSS v4</div>
+                                <div class="text-sm text-gray-400">Utility-first CSS</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center text-2xl">📘</div>
+                            <div>
+                                <div class="font-bold">TypeScript</div>
+                                <div class="text-sm text-gray-400">Type safety</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-800 rounded-2xl p-8">
+                    <h3 class="text-2xl font-bold mb-6 text-green-400">Backend & AI</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center text-2xl">🗄️</div>
+                            <div>
+                                <div class="font-bold">Drizzle ORM</div>
+                                <div class="text-sm text-gray-400">SQLite, type-safe queries</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center text-2xl">🤖</div>
+                            <div>
+                                <div class="font-bold">GigaChat / Scarlex</div>
+                                <div class="text-sm text-gray-400">LLM для генерации</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center text-2xl">📐</div>
+                            <div>
+                                <div class="font-bold">KaTeX</div>
+                                <div class="text-sm text-gray-400">Математические формулы</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 bg-gray-800 rounded-2xl p-6">
+                <h3 class="text-xl font-bold mb-4 text-center">🚀 Деплой</h3>
+                <div class="flex justify-center gap-8">
+                    <div class="text-center">
+                        <div class="text-3xl mb-2">☁️</div>
+                        <div class="font-bold">Vercel</div>
+                        <div class="text-sm text-gray-400">Production hosting</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl mb-2">🔗</div>
+                        <div class="font-bold">Live Demo</div>
+                        <div class="text-sm text-gray-400">gs-mvp-six.vercel.app</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 7: Demo -->
+    <div class="slide flex-col items-center justify-center min-h-screen p-8 gradient-bg" data-slide="7">
+        <div class="max-w-5xl w-full text-center">
+            <h2 class="text-4xl md:text-5xl font-bold mb-8">Демо</h2>
+            <p class="text-xl mb-12 text-white/90">Попробуй прямо сейчас</p>
+            
+            <div class="bg-white/10 backdrop-blur rounded-3xl p-8 mb-8">
+                <div class="text-6xl mb-6">🎮</div>
+                <a href="https://gs-mvp-six.vercel.app" target="_blank" 
+                   class="inline-block bg-white text-purple-600 px-8 py-4 rounded-xl text-xl font-bold hover:bg-gray-100 transition-colors">
+                    Открыть gs-mvp-six.vercel.app
+                </a>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6 text-left">
+                <div class="bg-white/10 rounded-xl p-6">
+                    <h4 class="font-bold mb-3">👨‍🏫 Для учителя</h4>
+                    <ol class="space-y-2 text-sm text-white/80">
+                        <li>1. Открой демо "Словарные слова: Зима"</li>
+                        <li>2. Посмотри редактор карточек</li>
+                        <li>3. Открой плеер (кнопка ▶)</li>
+                        <li>4. Скопируй ссылку ученикам</li>
+                        <li>5. Проверь результаты</li>
+                    </ol>
+                </div>
+                <div class="bg-white/10 rounded-xl p-6">
+                    <h4 class="font-bold mb-3">👨‍🎓 Для ученика</h4>
+                    <ol class="space-y-2 text-sm text-white/80">
+                        <li>1. Открой ссылку от учителя</li>
+                        <li>2. Введи имя</li>
+                        <li>3. Проходи карточки</li>
+                        <li>4. Переворачивай кликом</li>
+                        <li>5. Отмечай знание</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 8: Economics -->
+    <div class="slide flex-col items-center justify-center min-h-screen p-8 bg-gray-900" data-slide="8">
+        <div class="max-w-5xl w-full">
+            <h2 class="text-4xl md:text-5xl font-bold mb-12 text-center">Экономика</h2>
+            
+            <div class="bg-gray-800 rounded-2xl p-8 mb-8">
+                <h3 class="text-2xl font-bold mb-6 text-center text-green-400">Себестоимость на учителя в месяц</h3>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="text-center">
+                        <div class="text-4xl font-bold text-blue-400 mb-2">~50 ₽</div>
+                        <div class="text-gray-400">GigaChat API</div>
+                        <div class="text-xs text-gray-500 mt-1">~10K токенов/день</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-4xl font-bold text-purple-400 mb-2">~150 ₽</div>
+                        <div class="text-gray-400">Vercel Pro</div>
+                        <div class="text-xs text-gray-500 mt-1">Бандл + хостинг</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-4xl font-bold text-green-400 mb-2">~200 ₽</div>
+                        <div class="text-gray-400">Итого</div>
+                        <div class="text-xs text-gray-500 mt-1">Без зарплат</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gray-800 rounded-2xl p-6">
+                <h4 class="font-bold mb-4 text-center">📊 Источники</h4>
+                <div class="grid md:grid-cols-2 gap-4 text-sm">
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <div class="font-bold text-blue-400">GigaChat</div>
+                        <div class="text-gray-400">Тариф: 1K токенов = 0.5 ₽</div>
+                        <a href="https://developers.sber.ru/docs/ru/gigachat/api-reference" target="_blank" class="text-blue-400 hover:underline">Документация →</a>
+                    </div>
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <div class="font-bold text-purple-400">Vercel</div>
+                        <div class="text-gray-400">Pro: $20/мес ≈ 1800 ₽</div>
+                        <a href="https://vercel.com/pricing" target="_blank" class="text-blue-400 hover:underline">Pricing →</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 9: Roadmap -->
+    <div class="slide flex-col items-center justify-center min-h-screen p-8 bg-gray-900" data-slide="9">
+        <div class="max-w-5xl w-full">
+            <h2 class="text-4xl md:text-5xl font-bold mb-12 text-center">Roadmap</h2>
+            
+            <div class="space-y-6">
+                <div class="bg-green-900/30 border border-green-500/30 rounded-2xl p-6">
+                    <div class="flex items-center gap-4 mb-4">
+                        <span class="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold">MVP ✅</span>
+                        <h3 class="text-xl font-bold">Сейчас</h3>
+                    </div>
+                    <div class="grid md:grid-cols-3 gap-4 text-sm text-gray-300">
+                        <div>✅ Генерация карточек</div>
+                        <div>✅ Редактор</div>
+                        <div>✅ Плеер</div>
+                        <div>✅ Ссылка ученикам</div>
+                        <div>✅ Результаты</div>
+                        <div>✅ Печать A4</div>
+                        <div>✅ KaTeX формулы</div>
+                        <div>✅ Мобильная версия</div>
+                    </div>
+                </div>
+
+                <div class="bg-blue-900/30 border border-blue-500/30 rounded-2xl p-6">
+                    <div class="flex items-center gap-4 mb-4">
+                        <span class="bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-bold">v1.0</span>
+                        <h3 class="text-xl font-bold">Ближайшее будущее</h3>
+                    </div>
+                    <div class="grid md:grid-cols-3 gap-4 text-sm text-gray-300">
+                        <div>🔲 Викторины с выбором ответа</div>
+                        <div>🔲 Раздаточные материалы</div>
+                        <div>🔲 Mindmap по теме</div>
+                        <div>🔲 Fork наборов</div>
+                        <div>🔲 Библиотека готовых наборов</div>
+                        <div>🔲 Экспорт в DOCX</div>
+                    </div>
+                </div>
+
+                <div class="bg-purple-900/30 border border-purple-500/30 rounded-2xl p-6">
+                    <div class="flex items-center gap-4 mb-4">
+                        <span class="bg-purple-500 text-white px-3 py-1 rounded-full text-sm font-bold">v2.0</span>
+                        <h3 class="text-xl font-bold">Долгосрок</h3>
+                    </div>
+                    <div class="grid md:grid-cols-3 gap-4 text-sm text-gray-300">
+                        <div>🔲 Адаптивное обучение</div>
+                        <div>🔲 Интеграция с LMS</div>
+                        <div>🔲 Аналитика класса</div>
+                        <div>🔲 Мобильное приложение</div>
+                        <div>🔲 Коллаборативная работа</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 10: Summary -->
+    <div class="slide flex-col items-center justify-center min-h-screen p-8 sber-gradient" data-slide="10">
+        <div class="max-w-4xl w-full text-center">
+            <h2 class="text-4xl md:text-5xl font-bold mb-8">ГигаСамобранка</h2>
+            
+            <div class="bg-white/10 backdrop-blur rounded-3xl p-8 mb-8">
+                <p class="text-2xl mb-6">Учитель загружает материалы → получает карточки → ученики учатся</p>
+                
+                <div class="grid md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white/20 rounded-xl p-4">
+                        <div class="text-3xl font-bold">5 мин</div>
+                        <div class="text-sm">на подготовку</div>
+                    </div>
+                    <div class="bg-white/20 rounded-xl p-4">
+                        <div class="text-3xl font-bold">0 руб</div>
+                        <div class="text-sm">для учеников</div>
+                    </div>
+                    <div class="bg-white/20 rounded-xl p-4">
+                        <div class="text-3xl font-bold">∞</div>
+                        <div class="text-sm">предметов</div>
+                    </div>
+                </div>
+
+                <a href="https://gs-mvp-six.vercel.app" target="_blank" 
+                   class="inline-block bg-white text-green-600 px-8 py-4 rounded-xl text-xl font-bold hover:bg-gray-100 transition-colors">
+                    Попробовать демо
+                </a>
+            </div>
+
+            <div class="text-white/80">
+                <p class="text-lg mb-2">Хакатон СберОбразование 2026</p>
+                <p class="text-sm">Команда GigaSamobranka</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="fixed bottom-8 left-1/2 transform -translate-x-1/2 flex gap-4 z-50">
+        <button onclick="prevSlide()" class="bg-gray-800 hover:bg-gray-700 px-6 py-3 rounded-lg font-bold transition-colors">
+            ← Назад
+        </button>
+        <div class="bg-gray-800 px-4 py-3 rounded-lg">
+            <span id="currentSlide">1</span> / <span id="totalSlides">10</span>
+        </div>
+        <button onclick="nextSlide()" class="bg-gray-800 hover:bg-gray-700 px-6 py-3 rounded-lg font-bold transition-colors">
+            Вперёд →
+        </button>
+    </div>
+
+    <!-- Keyboard hint -->
+    <div class="fixed bottom-8 right-8 text-gray-500 text-sm hidden md:block">
+        Стрелки ← → для навигации
+    </div>
+
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 10;
+
+        function showSlide(n) {
+            const slides = document.querySelectorAll('.slide');
+            
+            if (n > totalSlides) currentSlide = 1;
+            if (n < 1) currentSlide = totalSlides;
+            
+            slides.forEach(slide => slide.classList.remove('active'));
+            slides[currentSlide - 1].classList.add('active');
+            
+            document.getElementById('currentSlide').textContent = currentSlide;
+            document.getElementById('progress').style.width = (currentSlide / totalSlides * 100) + '%';
+        }
+
+        function nextSlide() {
+            currentSlide++;
+            showSlide(currentSlide);
+        }
+
+        function prevSlide() {
+            currentSlide--;
+            showSlide(currentSlide);
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                prevSlide();
+            }
+        });
+
+        // Initialize
+        document.getElementById('totalSlides').textContent = totalSlides;
+    </script>
+</body>
+</html>
