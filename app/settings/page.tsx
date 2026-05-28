@@ -24,7 +24,7 @@ const DEFAULT_SETTINGS: LlmSettings = {
   baseUrl: "https://api.scarlex.ru/v1",
   oauthUrl: "https://ngw.devices.sberbank.ru:9443/api/v2/oauth",
   scope: "GIGACHAT_API_PERS",
-  model: "claude-haiku-4-7",
+  model: "claude-sonnet-4.6",
 };
 
 
@@ -32,7 +32,7 @@ const PROVIDER_DEFAULTS: Record<Provider, Partial<LlmSettings>> = {
   mock: {},
   scarlex: {
     baseUrl: "https://api.scarlex.ru/v1",
-    model: "claude-haiku-4-7",
+    model: "claude-sonnet-4.6",
   },
   gigachat: {
     baseUrl: "https://gigachat.devices.sberbank.ru/api/v1",
@@ -43,11 +43,11 @@ const PROVIDER_DEFAULTS: Record<Provider, Partial<LlmSettings>> = {
 };
 
 const SCARLEX_MODELS = [
-  { value: "claude-haiku-4-7", label: "claude-haiku-4-7 (проверено — default)" },
-  { value: "claude-opus-4.7", label: "claude-opus-4.7 (проверено)" },
-  { value: "claude-opus-4.6", label: "claude-opus-4.6 (проверено)" },
+  { value: "claude-sonnet-4.6", label: "claude-sonnet-4.6 (рекомендуем — default)" },
   { value: "claude-sonnet-4", label: "claude-sonnet-4 (проверено)" },
-  { value: "claude-sonnet-4.6", label: "claude-sonnet-4.6 (проверено)" },
+  { value: "claude-opus-4.7", label: "claude-opus-4.7 (проверено, дороже)" },
+  { value: "claude-opus-4.6", label: "claude-opus-4.6 (проверено, дороже)" },
+  { value: "claude-haiku-4-7", label: "claude-haiku-4-7 (быстрая, проще)" },
 ];
 
 export default function SettingsPage() {
@@ -161,7 +161,7 @@ export default function SettingsPage() {
                     <option value="custom">Своя модель</option>
                   </select>
                   <p className="mt-1 text-xs text-gray-500">
-                    haiku-4-7 — быстрая и стабильная. sonnet-4 и opus-4.7 — умнее, но дороже. GPT-модели недоступны (квота).
+                    sonnet-4.6 — оптимальный баланс качества и скорости. opus — умнее, но дороже. haiku — быстрая, но проще.
                   </p>
                 </label>
 

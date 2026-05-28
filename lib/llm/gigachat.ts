@@ -3,6 +3,19 @@ import type { CardDraft, GenerateInput, RuntimeLlmSettings } from "./types";
 import { CardDraftArraySchema } from "./types";
 import { mockGenerate } from "./mock";
 
+const SYSTEM_PROMPT = `Ты опытный методист-составитель учебных карточек. Твоя задача — создать качественные карточки для школьников.
+
+ПРАВИЛА:
+- Вопрос должен быть конкретным, проверяющим понимание материала
+- Ответ — краткий, точный, информативный (1–3 предложения)
+- Не повторяй вопрос в ответе
+- Используй терминологию из исходного текста
+- difficulty: easy (определения, факты), medium (применение, связи), hard (анализ, синтез)
+- source — имя файла-источника
+
+Формат ответа — ТОЛЬКО JSON-массив, без пояснений:
+[{"question": "...", "answer": "...", "source": "...", "difficulty": "..."}]`;
+
 /**
  * Главная точка генерации карточек.
  * Default: mock (если ничего не выбрано — демо работает без ключа).
@@ -63,7 +76,7 @@ export async function generateCards(
           process.env.SCARLEX_BASE_URL ??
           process.env.OPENAI_BASE_URL ??
           "https://api.scarlex.ru/v1",
-        model: runtime?.model ?? process.env.SCARLEX_MODEL ?? "claude-haiku-4-7",
+        model: runtime?.model ?? process.env.SCARLEX_MODEL ?? "claude-sonnet-4.6",
       });
       return { cards, usedMock: false, provider: "scarlex", debug };
     } catch (err) {
@@ -176,11 +189,7 @@ async function callGigaChat(
       temperature: 0.4,
       max_tokens: 4096,
       messages: [
-        {
-          role: "system",
-          content:
-            "Ты методист. Ответь JSON-массивом карточек [{question,answer,source,difficulty}] без пояснений.",
-        },
+        { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: prompt },
       ],
     }),
@@ -236,11 +245,7 @@ async function callOpenAiCompatible(
         stream: false,
         max_tokens: 4096,
         messages: [
-          {
-            role: "system",
-            content:
-              "Ты методист. Ответь JSON-массивом карточек [{question,answer,source,difficulty}] без пояснений.",
-          },
+          { role: "system", content: SYSTEM_PROMPT },
           { role: "user", content: prompt },
         ],
       }),
@@ -333,12 +338,12 @@ async function callOpenAiCompatible(
 
 function buildPrompt(input: GenerateInput): string {
   const context = input.sources
-    .map((s) => `${s.filename}:\n${s.text.slice(0, 2000)}`)
+    .map((s) => `${s.filename}:\n${s.text.slice(0, 4000)}`)
     .join("\n---\n");
   return [
-    `Сгенерируй ${input.count} учебных карточек: тема «${input.topic}», ${input.grade} класс, ${input.subject}, сложность ${input.difficulty}.`,
-    'Формат: [{"question","answer","source","difficulty"}].',
-    'difficulty: easy|medium|hard. source — имя файла.',
+    `Сгенерируй ровно ${input.count} учебных карточек.`,
+    `Предмет: ${input.subject}. Класс: ${input.grade}. Тема: «${input.topic}». Сложность: ${input.difficulty}.`,
+    `Исходный материал:`,
     context,
   ].join("\n\n");
 }
